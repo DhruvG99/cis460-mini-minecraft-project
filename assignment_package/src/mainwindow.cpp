@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include<QScreen>
 #include <ui_mainwindow.h>
 #include "cameracontrolshelp.h"
 #include <QResizeEvent>
