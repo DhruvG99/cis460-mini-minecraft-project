@@ -8,6 +8,7 @@ private:
     glm::vec3 m_velocity, m_acceleration;
     Camera m_camera;
     const Terrain &mcr_terrain;
+    bool m_flyMode;
 
     void processInputs(InputBundle &inputs);
     void computePhysics(float dT, const Terrain &terrain);
@@ -40,6 +41,8 @@ public:
     void rotateOnForwardGlobal(float degrees) override;
     void rotateOnRightGlobal(float degrees) override;
     void rotateOnUpGlobal(float degrees) override;
+    void toggleFlyMode();
+
 
     // For sending the Player's data to the GUI
     // for display

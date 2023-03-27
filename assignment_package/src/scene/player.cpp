@@ -4,7 +4,7 @@
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
-      mcr_camera(m_camera)
+      m_flyMode(true), mcr_camera(m_camera)
 {}
 
 Player::~Player()
@@ -81,6 +81,11 @@ void Player::rotateOnUpGlobal(float degrees) {
     Entity::rotateOnUpGlobal(degrees);
     m_camera.rotateOnUpGlobal(degrees);
 }
+
+void Player::toggleFlyMode(){
+    m_flyMode = !m_flyMode;
+}
+
 
 QString Player::posAsQString() const {
     std::string str("( " + std::to_string(m_position.x) + ", " + std::to_string(m_position.y) + ", " + std::to_string(m_position.z) + ")");

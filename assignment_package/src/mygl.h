@@ -68,6 +68,9 @@ protected:
     // presses a mouse button
     void mousePressEvent(QMouseEvent *e);
 
+    void keyReleaseEvent(QKeyEvent *e);
+
+
 private slots:
     void tick(); // Slot that gets called ~60 times per second by m_timer firing.
 
