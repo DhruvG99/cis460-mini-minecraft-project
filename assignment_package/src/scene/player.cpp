@@ -16,13 +16,40 @@ void Player::tick(float dT, InputBundle &input) {
 }
 
 void Player::processInputs(InputBundle &inputs) {
-    // TODO: Update the Player's velocity and acceleration based on the
-    // state of the inputs.
+    m_acceleration = glm::vec3(0.0f);
+    float speedMod = 1.0;
+    float decayFactor = 0.9;
+    float accThresh = 0.1;
+
+    m_acceleration = decayFactor * m_acceleration;
+    m_acceleration[0] = m_acceleration[0] < accThresh ? 0 : m_acceleration[0];
+    m_acceleration[1] = m_acceleration[1] < accThresh ? 0 : m_acceleration[1];
+    m_acceleration[2] = m_acceleration[2] < accThresh ? 0 : m_acceleration[2];
+
+    if(inputs.wPressed){
+        m_acceleration += m_forward * speedMod;
+    }
+
+    if(inputs.aPressed){
+        m_acceleration += -m_right * speedMod;
+    }
+
+    if(inputs.sPressed){
+        m_acceleration += -m_forward * speedMod;
+    }
+
+    if(inputs.dPressed){
+        m_acceleration += m_right * speedMod;
+    }
+    // TODO: shubh. Add condition for space key too
 }
 
 void Player::computePhysics(float dT, const Terrain &terrain) {
-    // TODO: Update the Player's position based on its acceleration
-    // and velocity, and also perform collision detection.
+    float decayFactor = 0.5;
+    m_velocity = decayFactor * m_velocity; // simulating friction
+
+    m_velocity += m_acceleration * dT;
+    m_position += m_velocity * dT;
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {

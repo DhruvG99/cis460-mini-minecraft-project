@@ -30,6 +30,7 @@ private:
     InputBundle m_inputs; // A collection of variables to be updated in keyPressEvent, mouseMoveEvent, mousePressEvent, etc.
 
     QTimer m_timer; // Timer linked to tick(). Fires approximately 60 times per second.
+    long long m_currFrameTime;
 
     void moveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

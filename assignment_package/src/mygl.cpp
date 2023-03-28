@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <QApplication>
+#include <QDateTime>
 #include <QKeyEvent>
 
 
@@ -94,6 +95,11 @@ void MyGL::resizeGL(int w, int h) {
 // all per-frame actions here, such as performing physics updates on all
 // entities in the scene.
 void MyGL::tick() {
+    long long prevTime = m_currFrameTime;
+    m_currFrameTime = QDateTime::currentMSecsSinceEpoch();
+    float dT = (m_currFrameTime - prevTime) * 0.001f; // in seconds
+    m_player.tick(dT, m_inputs);
+
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
 }
