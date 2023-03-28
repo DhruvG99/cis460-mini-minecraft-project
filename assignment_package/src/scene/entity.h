@@ -5,10 +5,11 @@ struct InputBundle {
     bool wPressed, aPressed, sPressed, dPressed, qPressed, ePressed;
     bool spacePressed;
     float mouseX, mouseY;
+    float prevMouseX, prevMouseY;
 
     InputBundle()
         : wPressed(false), aPressed(false), sPressed(false), qPressed(false), ePressed(false),
-          dPressed(false), spacePressed(false), mouseX(0.f), mouseY(0.f)
+          dPressed(false), spacePressed(false), mouseX(0.f), mouseY(0.f), prevMouseX(0.0f), prevMouseY(0.0f)
     {}
 };
 

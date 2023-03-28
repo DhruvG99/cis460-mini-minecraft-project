@@ -1,5 +1,6 @@
 #include "player.h"
 #include <QString>
+#include <iostream>
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
@@ -17,14 +18,9 @@ void Player::tick(float dT, InputBundle &input) {
 
 void Player::processInputs(InputBundle &inputs) {
     m_acceleration = glm::vec3(0.0f);
-    float speedMod = 1.0;
-    float decayFactor = 0.9;
+    float speedMod = 10.0;
     float accThresh = 0.1;
 
-    m_acceleration = decayFactor * m_acceleration;
-    m_acceleration[0] = m_acceleration[0] < accThresh ? 0 : m_acceleration[0];
-    m_acceleration[1] = m_acceleration[1] < accThresh ? 0 : m_acceleration[1];
-    m_acceleration[2] = m_acceleration[2] < accThresh ? 0 : m_acceleration[2];
 
     if(inputs.wPressed){
         m_acceleration += m_forward * speedMod;
@@ -42,14 +38,41 @@ void Player::processInputs(InputBundle &inputs) {
         m_acceleration += m_right * speedMod;
     }
     // TODO: shubh. Add condition for space key too
+    // TODO: shubh. Not sure if the rotation should be on global or local axis
+    float rotDeg = 0.5;
+
+    if(inputs.prevMouseX != inputs.mouseX){
+        if(inputs.prevMouseX > inputs.mouseX){
+            rotateOnUpLocal(rotDeg);
+        }
+        else{
+            rotateOnUpLocal(-rotDeg);
+        }
+    }
+
+    if(inputs.prevMouseY != inputs.mouseY){
+        if(inputs.prevMouseY > inputs.mouseY){
+            rotateOnRightLocal(rotDeg);
+        }
+        else{
+            rotateOnRightLocal(-rotDeg);
+        }
+    }
 }
 
 void Player::computePhysics(float dT, const Terrain &terrain) {
-    float decayFactor = 0.5;
+    glm::vec3 pos_old = m_position;
+
+    float decayFactor = 0.9;
     m_velocity = decayFactor * m_velocity; // simulating friction
+    m_velocity[0] = abs(m_velocity[0]) < 0.1 ? 0 : m_velocity[0];
+    m_velocity[1] = abs(m_velocity[1]) < 0.1 ? 0 : m_velocity[1];
+    m_velocity[2] = abs(m_velocity[2]) < 0.1 ? 0 : m_velocity[2];
 
     m_velocity += m_acceleration * dT;
     m_position += m_velocity * dT;
+    moveForwardGlobal(m_position[2]-pos_old[2]);
+    moveRightGlobal(m_position[0]-pos_old[0]);
 }
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {

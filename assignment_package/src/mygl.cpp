@@ -191,7 +191,12 @@ void MyGL::keyReleaseEvent(QKeyEvent *e){
 }
 
 void MyGL::mouseMoveEvent(QMouseEvent *e) {
-    // TODO
+    m_inputs.prevMouseX = this->width() / 2;
+    m_inputs.prevMouseY = this->height() / 2;
+    m_inputs.mouseX = e->x();
+    m_inputs.mouseY = e->y();
+    moveMouseToCenter();
+
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
