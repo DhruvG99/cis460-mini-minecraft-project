@@ -2,6 +2,7 @@
 #include <QString>
 #include <iostream>
 #include <string.h>
+#include <vector>
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
 
@@ -24,7 +25,8 @@ void Player::processInputs(InputBundle &inputs) {
     float speedMod = 100.0;
 
     if(m_flyMode == false && m_isGrounded == false){
-        m_acceleration = glm::vec3(0 ,-speedMod, 0);
+//        m_acceleration = glm::vec3(0 ,-speedMod, 0);
+        m_acceleration = glm::vec3(0, 0, 0);
     }
     else{
         m_acceleration = glm::vec3(0);
@@ -47,7 +49,6 @@ void Player::processInputs(InputBundle &inputs) {
         m_acceleration += m_right * speedMod;
     }
 
-//    std::cout << glm::to_string(m_acceleration) << std::endl;
     if(m_isGrounded){
         m_acceleration.y = 0;
         if(inputs.spacePressed){ // can only jump on the ground
@@ -80,30 +81,53 @@ void Player::processInputs(InputBundle &inputs) {
 
 }
 
+void getBaseNeighbors(glm::vec3 pos, std::vector<glm::vec3> &out_neigh){
+}
+
 void Player::computePhysics(float dT, const Terrain &terrain) {
     /*
      * TODO: shubh
      * Change flyMode back to true and grounded to true
-     * Add the is_grounded flag first
-     * Simulate gravity
      * Complete the flight mode
      * Do Raymarch for obstacle collision check
      * Implement area casting
      * Click to add and delete a block
      */
 
-    float out_dist;
-    glm::ivec3 out_blockHit;
-    // TODO: shubh: check for all 4 corners. Make the 200 as 1
-    bool hitGround = gridMarch(m_position, glm::vec3(0,-200,0), terrain, &out_dist, &out_blockHit);
-    if(hitGround){
-        m_isGrounded = out_dist < 0.1 ? true : false;
-    }
-    else{ // empty space below
-        m_isGrounded = true;
-//        throw std::runtime_error("No ground found below the object. Please check code");
-    }
-    std::cout << "on ground : " << m_isGrounded << std::endl;
+    std::vector<glm::vec3> baseCoords;
+    baseCoords.push_back(m_position);
+    baseCoords.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z));
+    baseCoords.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z));
+    baseCoords.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z));
+
+    std::vector<glm::vec3> vertexPos;
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z));
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z));
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z+1));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z+1));
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z+1));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z+1));
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z+2));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z+2));
+    vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z+2));
+    vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z+2));
+
+//    float out_dist;
+//    glm::ivec3 out_blockHit;
+//    m_isGrounded = true;
+//    for(auto coord : baseCoords){ // checking if all the 4 base coords are in air
+//        bool groundBelow = gridMarch(coord, glm::vec3(0,-200,0), terrain, &out_dist, &out_blockHit);
+//        if(groundBelow){
+//            if(out_dist > 0.1){
+//                m_isGrounded = false;
+//                break;
+//            }
+//        }
+//    }
+
+//    std::cout << "on ground : " << m_isGrounded << std::endl;
 
     glm::vec3 pos_old = m_position;
 
@@ -117,10 +141,45 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     m_velocity += m_acceleration * dT;
     m_position += m_velocity * dT;
 
+    float minOutX = m_position.x-pos_old.x, minOutY = m_position.y-pos_old.y, minOutZ = m_position.z-pos_old.z;
+//    for(const auto &pos : vertexPos){
+//        float out_dist;
+//        glm::ivec3 out_blockHit;
+//        bool xHit = gridMarch(pos, glm::vec3(m_position.x-pos_old.x,0,0), terrain, &out_dist, &out_blockHit);
+//        if(xHit){
+//            minOutX = std::min(minOutX, out_dist);
+//        }
+//    }
 
-    moveRightGlobal(m_position.x-pos_old.x);
-    moveUpLocal(m_position.y-pos_old.y);
-    moveForwardGlobal(m_position.z-pos_old.z);
+//    for(const auto &pos : vertexPos){
+//        float out_dist;
+//        glm::ivec3 out_blockHit;
+//        bool yHit = gridMarch(pos, glm::vec3(0,m_position.y-pos_old.y,0), terrain, &out_dist, &out_blockHit);
+//        if(yHit){
+//            minOutY = std::min(minOutY, out_dist);
+//        }
+//    }
+
+    for(const auto &pos : vertexPos){
+        float out_dist;
+        glm::ivec3 out_blockHit;
+        bool zHit = gridMarch(pos, glm::vec3(0,0,1.), terrain, &out_dist, &out_blockHit);
+        if(zHit){
+            minOutZ = std::min(minOutZ, out_dist);
+//            std::cout << "hit z : " << glm::to_string(out_blockHit) << std::endl;
+        }
+    }
+
+    float out_dist;
+    glm::ivec3 out_blockHit;
+    bool zHit = gridMarch(glm::vec3(33,129,32), glm::vec3(-1,0,0), terrain, &out_dist, &out_blockHit);
+    if(zHit){
+        std::cout << "hit z : " << glm::to_string(out_blockHit) << std::endl;
+    }
+
+    moveRightGlobal(minOutX);
+    moveUpLocal(minOutY);
+    moveForwardGlobal(minOutZ);
 //    std::cout << "acc : " << glm::to_string(m_acceleration) << std::endl;
 //    std::cout << "vel : " << glm::to_string(m_velocity) << std::endl;
 //    std::cout << "dT : " << dT << std::endl;
@@ -238,22 +297,17 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
         i = 2;
     }
     else{
-        throw std::invalid_argument("Incorrect axis for gridMarch.");
+        std::cout << "no coll" << std::endl;
+        return false;
     }
 
     float curr_t = 0.f;
     while(curr_t < maxLen) {
 
-        float min_t = glm::sqrt(3.f);
         float interfaceAxis = i; // Track axis for which t is smallest
         float local_offset = glm::max(0.f, glm::sign(rayDirection[i])); // See slide 5
-        // If the player is *exactly* on an interface then
-        // they'll never move if they're looking in a negative direction
-//        if(currCell[i] == rayOrigin[i] && local_offset == 0.f) {
-//            local_offset = -1.f;
-//        }
         int nextIntercept = currCell[i] + local_offset;
-        min_t = (nextIntercept - rayOrigin[i]) / rayDirection[i];
+        float min_t = (nextIntercept - rayOrigin[i]) / rayDirection[i];
 
         curr_t += min_t; // min_t is declared in slide 7 algorithm
         rayOrigin += rayDirection * min_t;
