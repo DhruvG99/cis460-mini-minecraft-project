@@ -57,7 +57,6 @@ void Player::processInputs(InputBundle &inputs) {
     }
 
     float dpi = 0.035;
-
     float angle = fmod(dpi * abs(inputs.prevMouseY - inputs.mouseY), 360.0f);
     if(inputs.prevMouseY > inputs.mouseY){
         if(m_forward.y < 0.95){ // simulate neck movement. Cannot look straight up
@@ -132,11 +131,16 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     float mu = 0.2; // friction coeff
     glm::vec3 fricForce = mu * m_velocity * 100.0f;
     m_acceleration -= fricForce;
+
+    m_acceleration[0] = abs(m_acceleration[0]) < 0.1 ? 0 : m_acceleration[0];
+    m_acceleration[1] = abs(m_acceleration[1]) < 0.1 ? 0 : m_acceleration[1];
+    m_acceleration[2] = abs(m_acceleration[2]) < 0.1 ? 0 : m_acceleration[2];
+
+    m_velocity += m_acceleration * dT;
     m_velocity[0] = abs(m_velocity[0]) < 0.1 ? 0 : m_velocity[0];
     m_velocity[1] = abs(m_velocity[1]) < 0.1 ? 0 : m_velocity[1];
     m_velocity[2] = abs(m_velocity[2]) < 0.1 ? 0 : m_velocity[2];
 
-    m_velocity += m_acceleration * dT;
     glm::vec3 new_pos = m_position + m_velocity * dT;
 
     float minOutX = new_pos.x-m_position.x, minOutY = new_pos.y-m_position.y, minOutZ = new_pos.z-m_position.z;
