@@ -8,8 +8,8 @@ struct InputBundle {
     float prevMouseX, prevMouseY;
 
     InputBundle()
-        : wPressed(false), aPressed(false), sPressed(false), qPressed(false), ePressed(false),
-          dPressed(false), spacePressed(false), mouseX(0.f), mouseY(0.f), prevMouseX(0.0f), prevMouseY(0.0f)
+        : wPressed(false), aPressed(false), sPressed(false), dPressed(false), qPressed(false),
+          ePressed(false), spacePressed(false), mouseX(0.f), mouseY(0.f), prevMouseX(0.0f), prevMouseY(0.0f)
     {}
 };
 

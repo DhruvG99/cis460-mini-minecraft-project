@@ -1,11 +1,14 @@
 #include "player.h"
 #include <QString>
 #include <iostream>
+#include <string.h>
+
+bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
-      m_flyMode(true), mcr_camera(m_camera)
+      m_flyMode(false), mcr_camera(m_camera)
 {}
 
 Player::~Player()
@@ -20,7 +23,7 @@ void Player::processInputs(InputBundle &inputs) {
     // TODO: shubh: Simulate gravity with the grounded_flag
 
     m_acceleration = glm::vec3(0);
-    float speedMod = 10.0;
+    float speedMod = 100.0;
 
     if(inputs.wPressed){
         m_acceleration += m_forward * speedMod;
@@ -38,41 +41,56 @@ void Player::processInputs(InputBundle &inputs) {
         m_acceleration += m_right * speedMod;
     }
 
-    if(inputs.spacePressed){ // TODO: shubh: add flag to check grounded while jumping
+    if(m_flyMode == false){
+        m_acceleration.y = 0;
+    } else if(inputs.spacePressed){ // TODO: shubh: add flag to check grounded while jumping
         m_acceleration.y += speedMod;
     }
 
     float dpi = 0.035;
 
-    if(inputs.prevMouseY != inputs.mouseY){
-        if(inputs.prevMouseY > inputs.mouseY){
-            rotateOnRightLocal(dpi * abs(inputs.prevMouseY - inputs.mouseY));
+    float angle = fmod(dpi * abs(inputs.prevMouseY - inputs.mouseY), 360.0f);
+    if(inputs.prevMouseY > inputs.mouseY){
+        if(m_forward.y < 0.95){ // simulate neck movement. Cannot look straight up
+            rotateOnRightLocal(angle);
         }
-        else{
-            rotateOnRightLocal(-dpi * abs(inputs.prevMouseY - inputs.mouseY));
+    }
+    else{
+        if(m_forward.y > -0.95){ // simulate neck movement. Cannot look straight down
+            rotateOnRightLocal(-angle);
         }
     }
 
-    if(inputs.prevMouseX != inputs.mouseX){
-        if(inputs.prevMouseX > inputs.mouseX){
-            rotateOnUpGlobal(dpi * abs(inputs.prevMouseX - inputs.mouseX));
-        }
-        else{
-            rotateOnUpGlobal(-dpi * abs(inputs.prevMouseX - inputs.mouseX));
-        }
+    angle = fmod(dpi * abs(inputs.prevMouseX - inputs.mouseX), 360.0f);
+    if(inputs.prevMouseX > inputs.mouseX){
+        rotateOnUpGlobal(angle);
     }
+    else{
+        rotateOnUpGlobal(-angle);
+    }
+
 
 }
 
 void Player::computePhysics(float dT, const Terrain &terrain) {
     /*
      * TODO: shubh
-     * Add the grounded flag first
+     * Change flyMode back to true
+     * Add the is_grounded flag first
      * Simulate gravity
      * Complete the flight mode
      * Do Raymarch for obstacle collision check
      * Implement area casting
+     * Click to add and delete a block
      */
+
+    float out_dist;
+    glm::ivec3 out_blockHit;
+    bool hitGround = gridMarch(glm::vec3(m_position.x, 129., m_position.z), glm::vec3(0,-200,0), terrain, &out_dist, &out_blockHit);
+//    std::cout << glm::to_string(m_position) << std::endl;
+    std::cout << hitGround << std::endl;
+//      std::cout << glm::to_string(m_position) << std::endl;
+
     glm::vec3 pos_old = m_position;
 
     float decayFactor = 0.9;
@@ -167,7 +185,21 @@ QString Player::lookAsQString() const {
     return QString::fromStdString(str);
 }
 
-
+std::string getName(BlockType t) {
+    std::string name = "unknown";
+    if (t == BlockType::EMPTY) {
+        name = "empty";
+    } else if (t == BlockType::GRASS) {
+        name = "grass";
+    } else if (t == BlockType::DIRT) {
+        name = "dirt";
+    } else if (t == BlockType::STONE) {
+        name = "stone";
+    } else if (t == BlockType::WATER) {
+        name = "water";
+    }
+    return name;
+}
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit) {
     float maxLen = glm::length(rayDirection); // Farthest we search
@@ -175,37 +207,45 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
     rayDirection = glm::normalize(rayDirection); // Now all t values represent world dist.
 
     int i;
-    if(rayDirection == glm::vec3(1,0,0)){
+    if(rayDirection.x != 0 &&  rayDirection.y == 0 && rayDirection.z == 0){
         i = 0;
-    } else if(rayDirection == glm::vec3(0,1,0)){
+    } else if(rayDirection.y != 0 && rayDirection.x == 0 && rayDirection.z == 0){
         i = 1;
     }
-    else if(rayDirection == glm::vec3(0,0,1)){
+    else if(rayDirection.z != 0 && rayDirection.x == 0 && rayDirection.y == 0){
         i = 2;
     }
     else{
         throw std::invalid_argument("Incorrect axis for gridMarch.");
     }
 
+    // checking if current block in obstacle
+    BlockType cellType = terrain.getBlockAt(currCell.x, currCell.y, currCell.z);
+    if(cellType != EMPTY) {
+        *out_blockHit = currCell;
+        *out_dist = glm::min(maxLen, 0.0f);
+        return true;
+    }
+
     float curr_t = 0.f;
     while(curr_t < maxLen) {
+
         float min_t = glm::sqrt(3.f);
         float interfaceAxis = -1; // Track axis for which t is smallest
-        if(rayDirection[i] != 0) { // Is ray parallel to axis i?
-            float offset = glm::max(0.f, glm::sign(rayDirection[i])); // See slide 5
-            // If the player is *exactly* on an interface then
-            // they'll never move if they're looking in a negative direction
-            if(currCell[i] == rayOrigin[i] && offset == 0.f) {
-                offset = -1.f;
-            }
-            int nextIntercept = currCell[i] + offset;
-            float axis_t = (nextIntercept - rayOrigin[i]) / rayDirection[i];
-            axis_t = glm::min(axis_t, maxLen); // Clamp to max len to avoid super out of bounds errors
-            if(axis_t < min_t) {
-                min_t = axis_t;
-                interfaceAxis = i;
-            }
+        float local_offset = glm::max(0.f, glm::sign(rayDirection[i])); // See slide 5
+        // If the player is *exactly* on an interface then
+        // they'll never move if they're looking in a negative direction
+//        if(currCell[i] == rayOrigin[i] && local_offset == 0.f) {
+//            local_offset = -1.f;
+//        }
+        int nextIntercept = currCell[i] + local_offset;
+        float axis_t = (nextIntercept - rayOrigin[i]) / rayDirection[i];
+        axis_t = glm::min(axis_t, maxLen); // Clamp to max len to avoid super out of bounds errors
+        if(axis_t < min_t) {
+            min_t = axis_t;
+            interfaceAxis = i;
         }
+
         if(interfaceAxis == -1) {
             throw std::out_of_range("interfaceAxis was -1 after the for loop in gridMarch!");
         }
