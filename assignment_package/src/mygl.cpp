@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_progLambert(this), m_progFlat(this), m_progInstanced(this),
-      m_terrain(this), m_player(glm::vec3(32.f, 129.f, 48.f), m_terrain), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
+      m_terrain(this), m_player(glm::vec3(32.f, 139.5f, 48.f), m_terrain), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -200,5 +200,16 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
-    // TODO
+    if(e->button() == Qt::RightButton){
+        glm::ivec3 toPlace;
+        if(m_player.placeBlockCheck(m_terrain, &toPlace)){
+            m_terrain.setBlockAt(toPlace.x, toPlace.y, toPlace.z, STONE);
+        }
+    }
+    else if(e->button() == Qt::LeftButton){
+        glm::ivec3 toBreak;
+        if(m_player.breakBlockCheck(m_terrain, &toBreak)){
+            m_terrain.setBlockAt(toBreak.x, toBreak.y, toBreak.z, EMPTY);
+        }
+    }
 }

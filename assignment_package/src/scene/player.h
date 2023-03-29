@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "camera.h"
 #include "terrain.h"
+#include <vector>
 
 class Player : public Entity {
 private:
@@ -11,8 +12,12 @@ private:
     bool m_flyMode, m_isGrounded;
 
     void processInputs(InputBundle &inputs);
+    void extracted(const Terrain &terrain, std::vector<glm::vec3> &vertexPos,
+                   float &out_dist, glm::ivec3 &out_blockHit,
+                   glm::vec3 &subdirection, bool &isCollided, int &i,
+                   float &min_dist);
     void computePhysics(float dT, const Terrain &terrain);
-
+    
 public:
     // Readonly public reference to our camera
     // for easy access from MyGL
@@ -43,6 +48,9 @@ public:
     void rotateOnUpGlobal(float degrees) override;
     void toggleFlyMode();
 
+    bool placeBlockCheck(Terrain&, glm::ivec3*);
+    bool breakBlockCheck(Terrain&, glm::ivec3*);
+    std::vector<glm::vec3> getPoints(glm::vec3 subdirection);
 
     // For sending the Player's data to the GUI
     // for display
