@@ -23,9 +23,7 @@ void Player::tick(float dT, InputBundle &input) {
 }
 
 void Player::processInputs(InputBundle &inputs) {
-    // TODO: shubh: Simulate gravity with the grounded_flag
     float speedMod = 100.0;
-
     if(m_flyMode == false && m_isGrounded == false){
         m_acceleration = glm::vec3(0 ,-3.0*speedMod, 0);
     }
@@ -53,7 +51,7 @@ void Player::processInputs(InputBundle &inputs) {
     if(m_isGrounded){
         m_acceleration.y = 0;
         if(inputs.spacePressed){ // can only jump on the ground
-            m_acceleration.y += 15  * speedMod;
+            m_acceleration.y += 50  * speedMod;
         }
     }
 
@@ -147,11 +145,10 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
         std::vector<glm::vec3> collisionPoints = getPoints(subdirection);
         for(const auto &point : collisionPoints){
             if(gridMarch(point, subdirection, terrain, &out_dist, &out_blockHit)){
-                if (true || m_isGrounded == false){
-                    m_acceleration[i] = 0;
-                    m_velocity[i] = 0;
-                }
-                if(i == 1 && subdirection[1] <= 0){
+                m_acceleration[i] = 0;
+                m_velocity[i] = 0;
+                if(i == 1 && subdirection[1] <= 0 && out_dist < abs(subdirection[i])){
+                    // the third condition is emperical to make sure that the player doesn't levitate
                     m_isGrounded = true;
                     m_acceleration = glm::vec3(0);
                     subdirection[i] = 0;
@@ -164,6 +161,7 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
         }
         posChange += subdirection * min_dist;
     }
+//    std::cout << m_isGrounded << std::endl;
     moveAlongVector(posChange);
 }
 
