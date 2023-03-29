@@ -1,4 +1,5 @@
 #include "chunk.h"
+#include <iostream>
 
 Chunk::Chunk(OpenGLContext* context) :
     Drawable(context), m_blocks(),
@@ -8,18 +9,22 @@ Chunk::Chunk(OpenGLContext* context) :
 }
 
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
-void Chunk::createModelVBOdata(int x, int z)
+void Chunk::createChunkVBOdata(int x, int z)
 {
     //or instead go through all blocks
     //16.256.16
-    int idxCount = 0;
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> vboData;
-    std::vector<glm::vec3> vbocol;
+    idxCount = 0;
+    idx.clear();
+    vboData.clear();
+    vboPos.clear();
+    vboNor.clear();
+    vboCol.clear();
 
     //coords of lower corner of chunk?
     int xChunk = static_cast<int>(glm::floor(x / 16.f));
     int zChunk = static_cast<int>(glm::floor(z / 16.f));
+//    std::cout << "Chunk VBO: "
+//              << xChunk << ", " << zChunk << std::endl;
     for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 256; ++j) {
             for(int k = 0; k < 16; ++k) {
@@ -52,17 +57,20 @@ void Chunk::createModelVBOdata(int x, int z)
                         //possibly check if the currentBlock is water?
                         if(adjBlock==EMPTY)
                         {
-                            glm::vec4 vboCol = colorFromBlock.at(currBlock);
-                            //pos vecs for this face - last elem 0.0f because it adds to vert
-                            glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
+                            glm::vec4 vertCol = colorFromBlock.at(currBlock);
+                            //pos vecs for this block - last elem 0.0f because it adds to vert
+                            glm::vec4 blockPos = glm::vec4(i+x, j, k+z, 0.0f);
                             for(const VertexData &v: f.verts)
                             {
-                                glm::vec4 vboPos = v.pos + blockPos;
+                                glm::vec4 vertPos = v.pos + blockPos;
                                 //positions
-                                vboData.push_back(vboPos);
+                                vboPos.push_back(vertPos);
+                                vboData.push_back(vertPos);
                                 //colors
-                                vboData.push_back(vboCol);
+                                vboCol.push_back(vertCol);
+                                vboData.push_back(vertCol);
                                 //normals
+                                vboNor.push_back(glm::vec4(f.dirVec,0.f));
                                 vboData.push_back(glm::vec4(f.dirVec,0.f));
                             }
                             idx.push_back(0 + idxCount);
@@ -78,17 +86,31 @@ void Chunk::createModelVBOdata(int x, int z)
             }
         }
     }
+    m_count = idx.size();
 }
 
-#if 0
+#if 1
 void Chunk::createVBOdata()
 {
     /*what we have:
      * m_blocks - all the blocks in this chunk: m_blocks
      * m_neighbors - map from direction to neighbour chunk
-     *
      */
-//    int idx = 0;
+    generateIdx();
+    mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
+    mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
+
+    generatePos();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPos);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, vboPos.size() * sizeof(glm::vec4), vboPos.data(), GL_STATIC_DRAW);
+
+    generateNor();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufNor);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, vboNor.size() * sizeof(glm::vec4), vboNor.data(), GL_STATIC_DRAW);
+
+    generateCol();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufCol);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, vboCol.size() * sizeof(glm::vec4), vboCol.data(), GL_STATIC_DRAW);
     std::vector<GLuint> idx;
     std::vector<glm::vec4> poscol;
 

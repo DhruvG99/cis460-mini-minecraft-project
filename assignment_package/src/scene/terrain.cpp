@@ -144,49 +144,20 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 // model matrix to the proper X and Z translation!
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
 {
-    std::vector<glm::vec3> offsets, colors;
-
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
+//            std::cout << "Terrain Draw: "
+//                      << x << ", " << z << std::endl;
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            chunk->createModelVBOdata(x, z);
-
-
-            for(int i = 0; i < 16; ++i) {
-                for(int j = 0; j < 256; ++j) {
-                    for(int k = 0; k < 16; ++k) {
-                        BlockType t = chunk->getBlockAt(i, j, k);
-
-                        if(t != EMPTY) {
-                            offsets.push_back(glm::vec3(i+x, j, k+z));
-                            switch(t) {
-                            case GRASS:
-                                colors.push_back(glm::vec3(95.f, 159.f, 53.f) / 255.f);
-                                break;
-                            case DIRT:
-                                colors.push_back(glm::vec3(121.f, 85.f, 58.f) / 255.f);
-                                break;
-                            case STONE:
-                                colors.push_back(glm::vec3(0.5f));
-                                break;
-                            case WATER:
-                                colors.push_back(glm::vec3(0.f, 0.f, 0.75f));
-                                break;
-                            default:
-                                // Other block types are not yet handled, so we default to debug purple
-                                colors.push_back(glm::vec3(1.f, 0.f, 1.f));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            chunk->createModelVBOdata(offsets, colors);
-            shaderProgram->draw(*chunk); //need to dereference to pass actual object to drawing fn
+            chunk->createChunkVBOdata(x, z);
+            chunk->createVBOdata();
+            //need to dereference to pass actual object to drawing fn
+            shaderProgram->draw(*chunk);
         }
     }
 }
 
+#if 0
 //USE THE BELOW TO REDO ABOVE. call draw at end of every chunk for loop
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
     m_geomCube.clearOffsetBuf();
@@ -232,11 +203,12 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     m_geomCube.createInstancedVBOdata(offsets, colors);
     shaderProgram->drawInstanced(m_geomCube);
 }
+#endif
 
 void Terrain::CreateTestScene()
 {
     // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
-    m_geomCube.createVBOdata();
+//    m_geomCube.createVBOdata();
 
     // Create the Chunks that will
     // store the blocks for our

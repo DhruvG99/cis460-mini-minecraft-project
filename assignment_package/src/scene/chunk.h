@@ -109,10 +109,18 @@ private:
     // These allow us to properly determine
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
 
+    int idxCount = 0;
+    std::vector<GLuint> idx;
+    std::vector<glm::vec4> vboData;
+    std::vector<glm::vec4> vboPos;
+    std::vector<glm::vec4> vboNor;
+    std::vector<glm::vec4> vboCol;
+
 public:
     Chunk(OpenGLContext*);
-    void createModelVBOdata(int, int);
+    void createChunkVBOdata(int, int);
     void createVBOdata() override;
+    //drawMode is triangles by default
 
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z) const;
     BlockType getBlockAt(int x, int y, int z) const;
