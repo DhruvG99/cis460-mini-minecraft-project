@@ -1,10 +1,99 @@
 #include "chunk.h"
 
-
-Chunk::Chunk() : m_blocks(), m_neighbors{{XPOS, nullptr}, {XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
+Chunk::Chunk(OpenGLContext* context) :
+    Drawable(context), m_blocks(),
+    m_neighbors{{XPOS, nullptr},{XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
 {
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
+
+//Using x,z - the chunk coordinate - to transform all blocks appropriately
+void Chunk::createModelVBOdata(int x, int z)
+{
+    //or instead go through all blocks
+    //16.256.16
+    int idxCount = 0;
+    std::vector<GLuint> idx;
+    std::vector<glm::vec4> vboData;
+    std::vector<glm::vec3> vbocol;
+
+    //coords of lower corner of chunk?
+    int xChunk = static_cast<int>(glm::floor(x / 16.f));
+    int zChunk = static_cast<int>(glm::floor(z / 16.f));
+    for(int i = 0; i < 16; ++i) {
+        for(int j = 0; j < 256; ++j) {
+            for(int k = 0; k < 16; ++k) {
+                BlockType currBlock = this->getBlockAt(i, j, k);
+                //if not empty, paint faces (while checking for empty neighbors)
+                if(currBlock != EMPTY)
+                {
+                    for(const BlockFace &f: adjacentFaces)
+                    {
+                        BlockType adjBlock = EMPTY;
+                        glm::vec3 testBorder = glm::vec3(i,j,k)*f.dirVec;
+                        /*testing if the face is on a bordering chunk*/
+                        if(testBorder.x >=16 || testBorder.y >=256 || testBorder.z >=16 ||
+                                testBorder.x <0 || testBorder.y <0 || testBorder.z <16)
+                        {
+                            Chunk* adjChunk = this->m_neighbors[f.dir];
+                            //if a neighbo(u)ring chunk exists
+                            if(adjChunk != nullptr) {
+                                //https://stackoverflow.com/questions/7594508/modulo-operator-with-negative-values
+                                int dx = (16 + i + (int)f.dirVec.x) % 16;
+                                int dy = (256 + j + (int)f.dirVec.y) % 256;
+                                int dz = (16 + k + (int)f.dirVec.z) % 16;
+                                adjBlock = adjChunk->getBlockAt(dx,dy,dz);
+                            }
+                        }
+                        //face is in the same chunk
+                        else
+                            adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
+
+                        //possibly check if the currentBlock is water?
+                        if(adjBlock==EMPTY)
+                        {
+                            glm::vec4 vboCol = colorFromBlock.at(currBlock);
+                            //pos vecs for this face - last elem 0.0f because it adds to vert
+                            glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
+                            for(const VertexData &v: f.verts)
+                            {
+                                glm::vec4 vboPos = v.pos + blockPos;
+                                //positions
+                                vboData.push_back(vboPos);
+                                //colors
+                                vboData.push_back(vboCol);
+                                //normals
+                                vboData.push_back(glm::vec4(f.dirVec,0.f));
+                            }
+                            idx.push_back(0 + idxCount);
+                            idx.push_back(1 + idxCount);
+                            idx.push_back(2 + idxCount);
+                            idx.push_back(0 + idxCount);
+                            idx.push_back(2 + idxCount);
+                            idx.push_back(3 + idxCount);
+                            idxCount += 4;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#if 0
+void Chunk::createVBOdata()
+{
+    /*what we have:
+     * m_blocks - all the blocks in this chunk: m_blocks
+     * m_neighbors - map from direction to neighbour chunk
+     *
+     */
+//    int idx = 0;
+    std::vector<GLuint> idx;
+    std::vector<glm::vec4> poscol;
+
+}
+#endif
 
 // Does bounds checking with at()
 BlockType Chunk::getBlockAt(unsigned int x, unsigned int y, unsigned int z) const {
