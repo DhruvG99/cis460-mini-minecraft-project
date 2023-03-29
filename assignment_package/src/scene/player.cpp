@@ -25,9 +25,8 @@ void Player::tick(float dT, InputBundle &input) {
 void Player::processInputs(InputBundle &inputs) {
     float speedMod = 100.0;
     if(m_flyMode == false && m_isGrounded == false){
-        m_acceleration = glm::vec3(0 ,-3.0*speedMod, 0);
-    }
-    else{
+        m_acceleration = glm::vec3(0, -3.0*speedMod, 0);
+    } else{
         m_acceleration = glm::vec3(0);
     }
 
@@ -46,6 +45,16 @@ void Player::processInputs(InputBundle &inputs) {
 
     if(inputs.dPressed){
         m_acceleration += m_right * speedMod;
+    }
+
+    if(m_flyMode){
+        if(inputs.qPressed){
+            m_acceleration += -m_up * speedMod;
+        }
+
+        if(inputs.ePressed){
+            m_acceleration += m_up * speedMod;
+        }
     }
 
     if(m_isGrounded){
