@@ -9,10 +9,8 @@ Chunk::Chunk(OpenGLContext* context) :
 }
 
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
-void Chunk::createChunkVBOdata(int x, int z)
+void Chunk::createChunkVBOdata(int xChunk, int zChunk)
 {
-    //or instead go through all blocks
-    //16.256.16
     idxCount = 0;
     idx.clear();
     vboData.clear();
@@ -21,8 +19,8 @@ void Chunk::createChunkVBOdata(int x, int z)
     vboCol.clear();
 
     //coords of lower corner of chunk?
-    int xChunk = static_cast<int>(glm::floor(x / 16.f));
-    int zChunk = static_cast<int>(glm::floor(z / 16.f));
+//    int xChunk = static_cast<int>(glm::floor(x / 16.f));
+//    int zChunk = static_cast<int>(glm::floor(z / 16.f));
 //    std::cout << "Chunk VBO: "
 //              << xChunk << ", " << zChunk << std::endl;
     for(int i = 0; i < 16; ++i) {
@@ -59,7 +57,7 @@ void Chunk::createChunkVBOdata(int x, int z)
                         {
                             glm::vec4 vertCol = colorFromBlock.at(currBlock);
                             //pos vecs for this block - last elem 0.0f because it adds to vert
-                            glm::vec4 blockPos = glm::vec4(i+x, j, k+z, 0.0f);
+                            glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
                             for(const VertexData &v: f.verts)
                             {
                                 glm::vec4 vertPos = v.pos + blockPos;

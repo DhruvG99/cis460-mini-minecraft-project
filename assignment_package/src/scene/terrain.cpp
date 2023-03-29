@@ -139,9 +139,7 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
     return cPtr;
 }
 
-// TODO: When you make Chunk inherit from Drawable, change this code so
-// it draws each Chunk with the given ShaderProgram, remembering to set the
-// model matrix to the proper X and Z translation!
+#if 1
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
 {
     for(int x = minX; x < maxX; x += 16) {
@@ -156,6 +154,7 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
         }
     }
 }
+#endif
 
 #if 0
 //USE THE BELOW TO REDO ABOVE. call draw at end of every chunk for loop
