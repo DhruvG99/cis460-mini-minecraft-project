@@ -129,8 +129,6 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
 
 //    std::cout << "on ground : " << m_isGrounded << std::endl;
 
-    glm::vec3 pos_old = m_position;
-
     float mu = 0.2; // friction coeff
     glm::vec3 fricForce = mu * m_velocity * 100.0f;
     m_acceleration -= fricForce;
@@ -139,9 +137,9 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     m_velocity[2] = abs(m_velocity[2]) < 0.1 ? 0 : m_velocity[2];
 
     m_velocity += m_acceleration * dT;
-    m_position += m_velocity * dT;
+    glm::vec3 new_pos = m_position + m_velocity * dT;
 
-    float minOutX = m_position.x-pos_old.x, minOutY = m_position.y-pos_old.y, minOutZ = m_position.z-pos_old.z;
+    float minOutX = new_pos.x-m_position.x, minOutY = new_pos.y-m_position.y, minOutZ = new_pos.z-m_position.z;
 //    for(const auto &pos : vertexPos){
 //        float out_dist;
 //        glm::ivec3 out_blockHit;
@@ -160,22 +158,21 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
 //        }
 //    }
 
-    for(const auto &pos : vertexPos){
-        float out_dist;
-        glm::ivec3 out_blockHit;
-        bool zHit = gridMarch(pos, glm::vec3(0,0,1.), terrain, &out_dist, &out_blockHit);
-        if(zHit){
-            minOutZ = std::min(minOutZ, out_dist);
-//            std::cout << "hit z : " << glm::to_string(out_blockHit) << std::endl;
-        }
-    }
+//    for(const auto &pos : vertexPos){
+//        float out_dist;
+//        glm::ivec3 out_blockHit;
+//        bool zHit = gridMarch(pos, glm::vec3(0,0, new_pos.z - m_position.z), terrain, &out_dist, &out_blockHit);
+////        std::cout << "direction : " << new_pos.z - m_position.z << std::endl;
+//        if(zHit){
+//            minOutZ = std::min(minOutZ, out_dist);
+////            std::cout << "hit z : " << glm::to_string(out_dist) << std::endl;
+//        }
+//    }
 
     float out_dist;
     glm::ivec3 out_blockHit;
-    bool zHit = gridMarch(glm::vec3(33,129,32), glm::vec3(-1,0,0), terrain, &out_dist, &out_blockHit);
-    if(zHit){
-        std::cout << "hit z : " << glm::to_string(out_blockHit) << std::endl;
-    }
+    bool zHit = gridMarch(glm::vec3(32, 129, 34), glm::vec3(0,0, -0.125), terrain, &out_dist, &out_blockHit);
+    std::cout << "hit z : " <<  zHit << "  " << glm::to_string(out_dist) << std::endl;
 
     moveRightGlobal(minOutX);
     moveUpLocal(minOutY);
@@ -285,8 +282,6 @@ std::string getName(BlockType t) {
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit) {
     float maxLen = glm::length(rayDirection); // Farthest we search
     glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin));
-    rayDirection = glm::normalize(rayDirection); // Now all t values represent world dist.
-
     int i;
     if(rayDirection.x != 0 &&  rayDirection.y == 0 && rayDirection.z == 0){
         i = 0;
@@ -297,7 +292,7 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
         i = 2;
     }
     else{
-        std::cout << "no coll" << std::endl;
+//        std::cout << "no coll" << std::endl;
         return false;
     }
 
