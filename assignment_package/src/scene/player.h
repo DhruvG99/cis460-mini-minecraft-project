@@ -48,9 +48,10 @@ public:
     void rotateOnUpGlobal(float degrees) override;
     void toggleFlyMode();
 
-    bool placeBlockCheck(Terrain&, glm::ivec3*);
-    bool breakBlockCheck(Terrain&, glm::ivec3*);
+    void placeBlock(Terrain&);
+    void breakBlock(Terrain&);
     std::vector<glm::vec3> getPoints(glm::vec3 subdirection);
+    std::vector<glm::vec3> getNeighs(glm::ivec3 inp_pos);
 
     // For sending the Player's data to the GUI
     // for display

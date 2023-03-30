@@ -118,10 +118,7 @@ std::vector<glm::vec3> Player::getPoints(glm::vec3 subdirection){
 void Player::computePhysics(float dT, const Terrain &terrain) {
     /*
      * TODO: shubh
-     * Change flyMode back to true and grounded to true
-     * Complete the flight mode
-     * Do Raymarch for obstacle collision check
-     * Implement area casting
+     * optimize gridMarch
      * Click to add and delete a block
      */
 
@@ -170,7 +167,7 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
         }
         posChange += subdirection * min_dist;
     }
-//    std::cout << m_isGrounded << std::endl;
+//    std::cout << glm::to_string(m_forward) << "  " << glm::to_string(m_camera.getForward()) << std::endl;
     moveAlongVector(posChange);
 }
 
@@ -324,33 +321,73 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
 }
 
 
-bool Player::placeBlockCheck(Terrain& terrain, glm::ivec3* toPlace){
-    glm::ivec3 currCell = glm::ivec3(glm::ceil(m_position));
-    std::cout << glm::to_string(currCell) << std::endl;
-    glm::ivec3 offset = glm::ivec3(0,0,0);
-    offset = glm::min(glm::vec3(0.f), 2.f * glm::sign(m_forward));
-    currCell += offset;
-    std::cout << glm::to_string(offset) << std::endl;
-    std::cout << glm::to_string(currCell) << std::endl;
-    BlockType cellType = terrain.getBlockAt(currCell.x, currCell.y, currCell.z);
-    std::cout << getName(cellType) << std::endl;
-    if(cellType != EMPTY) {
-        return false;
-    }
-    else{ // can place
-        *toPlace = currCell;
-        return true;
+std::vector<glm::vec3> Player::getNeighs(glm::ivec3 inp_pos){
+    std::vector<glm::vec3> neighs;
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x-1, inp_pos.y, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x+1, inp_pos.y, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y+1, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y-1, inp_pos.z+1));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z-1));
+
+    return neighs;
+}
+
+void Player::placeBlock(Terrain& terrain){
+    float detectLength = 3.0f;
+    glm::vec3 rayOrigin = m_camera.mcr_position;
+    glm::vec3 rayDirection = m_forward * detectLength; // camera and player has the same look/forward vector
+
+    float out_dist;
+    glm::ivec3 out_blockHit;
+    float min_dist = 1000.0f;
+    glm::ivec3 targetPos;
+
+    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit)){
+        std::vector<glm::vec3> neighs = getNeighs(out_blockHit);
+        for(const auto &neigh : neighs){
+            if (terrain.getBlockAt(neigh.x, neigh.y, neigh.z) == BlockType::EMPTY){
+                glm::vec3 pos = glm::vec3(neigh.x, neigh.y, neigh.z);
+                float distance = glm::length(pos - rayOrigin);
+                if (distance < min_dist){
+                    min_dist = distance;
+                    targetPos = pos;
+                }
+            }
+        }
+
+        BlockType bt = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z);
+        if(true || min_dist < 1000.0){
+            terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, bt);
+        }
+
     }
 }
 
-bool Player::breakBlockCheck(Terrain& terrain, glm::ivec3* toBreak){
-    glm::ivec3 currCell = glm::ivec3(glm::floor(m_position));
-    BlockType cellType = terrain.getBlockAt(currCell.x, currCell.y, currCell.z);
-    if(cellType == EMPTY) {
-        return false;
-    }
-    else{ // can break
-        *toBreak = currCell;
-        return true;
+
+void Player::breakBlock(Terrain& terrain){
+    float detectLength = 3.0f;
+    glm::vec3 rayOrigin = m_camera.mcr_position;
+    glm::vec3 rayDirection = m_forward * detectLength; // camera and player has the same look/forward vector
+
+    float out_dist;
+    glm::ivec3 out_blockHit;
+    float min_dist = 1000.0f;
+    glm::ivec3 targetPos;
+
+    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit)){
+        std::vector<glm::vec3> neighs = getNeighs(out_blockHit);
+        for(const auto &neigh : neighs){
+            if (terrain.getBlockAt(neigh.x, neigh.y, neigh.z) != BlockType::EMPTY){
+                glm::vec3 pos = glm::vec3(neigh.x, neigh.y, neigh.z);
+                float distance = glm::length(pos - rayOrigin);
+                if (distance < min_dist){
+                    min_dist = distance;
+                    targetPos = pos;
+                }
+            }
+        }
+        terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, BlockType::EMPTY);
     }
 }

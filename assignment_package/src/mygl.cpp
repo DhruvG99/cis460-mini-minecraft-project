@@ -201,15 +201,9 @@ void MyGL::mouseMoveEvent(QMouseEvent *e) {
 
 void MyGL::mousePressEvent(QMouseEvent *e) {
     if(e->button() == Qt::RightButton){
-        glm::ivec3 toPlace;
-        if(m_player.placeBlockCheck(m_terrain, &toPlace)){
-            m_terrain.setBlockAt(toPlace.x, toPlace.y, toPlace.z, STONE);
-        }
+        m_player.placeBlock(m_terrain);
     }
     else if(e->button() == Qt::LeftButton){
-        glm::ivec3 toBreak;
-        if(m_player.breakBlockCheck(m_terrain, &toBreak)){
-            m_terrain.setBlockAt(toBreak.x, toBreak.y, toBreak.z, EMPTY);
-        }
+        m_player.breakBlock(m_terrain);
     }
 }
