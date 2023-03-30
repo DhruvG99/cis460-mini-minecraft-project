@@ -326,9 +326,9 @@ std::vector<glm::vec3> Player::getNeighs(glm::ivec3 inp_pos){
     neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z));
     neighs.push_back(glm::vec3(inp_pos.x-1, inp_pos.y, inp_pos.z));
     neighs.push_back(glm::vec3(inp_pos.x+1, inp_pos.y, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z));
     neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y+1, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y-1, inp_pos.z+1));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y-1, inp_pos.z));
+    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z+1));
     neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z-1));
 
     return neighs;
@@ -358,10 +358,7 @@ void Player::placeBlock(Terrain& terrain){
         }
 
         BlockType bt = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z);
-        if(true || min_dist < 1000.0){
-            terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, bt);
-        }
-
+        terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, bt);
     }
 }
 
