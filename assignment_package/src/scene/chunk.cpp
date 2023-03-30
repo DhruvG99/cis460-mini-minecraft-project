@@ -8,21 +8,20 @@ Chunk::Chunk(OpenGLContext* context) :
     std::fill_n(m_blocks.begin(), 65536, EMPTY);
 }
 
+Chunk::~Chunk()
+{
+    this->destroyVBOdata();
+}
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
 void Chunk::createChunkVBOdata(int xChunk, int zChunk)
 {
     idxCount = 0;
     idx.clear();
-    vboData.clear();
-    vboPos.clear();
-    vboNor.clear();
-    vboCol.clear();
-
-    //coords of lower corner of chunk?
-//    int xChunk = static_cast<int>(glm::floor(x / 16.f));
-//    int zChunk = static_cast<int>(glm::floor(z / 16.f));
-//    std::cout << "Chunk VBO: "
-//              << xChunk << ", " << zChunk << std::endl;
+    vboInter.clear();
+//    vboPos.clear();
+//    vboNor.clear();
+//    vboCol.clear();
+    //remove triple iteration?
     for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 256; ++j) {
             for(int k = 0; k < 16; ++k) {
@@ -33,10 +32,13 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                     for(const BlockFace &f: adjacentFaces)
                     {
                         BlockType adjBlock = EMPTY;
-                        glm::vec3 testBorder = glm::vec3(i,j,k)*f.dirVec;
-                        /*testing if the face is on a bordering chunk*/
-                        if(testBorder.x >=16 || testBorder.y >=256 || testBorder.z >=16 ||
-                                testBorder.x <0 || testBorder.y <0 || testBorder.z <16)
+                        glm::vec3 testBorder = glm::vec3(i,j,k) + f.dirVec;
+                        /*
+                         * testing if the face is on a bordering chunk
+                         * and then assigning to adjacent block
+                        */
+                        if(testBorder.x >=16.f || testBorder.y >=256.f || testBorder.z >=16.f ||
+                                testBorder.x < 0.0f || testBorder.y < 0.0f || testBorder.z < 0.f)
                         {
                             Chunk* adjChunk = this->m_neighbors[f.dir];
                             //if a neighbo(u)ring chunk exists
@@ -52,24 +54,26 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                         else
                             adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
 
-                        //possibly check if the currentBlock is water?
+                        //possibly check if the adjBlock is water?
                         if(adjBlock==EMPTY)
                         {
-                            glm::vec4 vertCol = colorFromBlock.at(currBlock);
+                            glm::vec4 vertCol = colorFromBlock.at(DEBUG);
+                            if(colorFromBlock.count(currBlock) != 0)
+                                vertCol = colorFromBlock.at(currBlock);
+
                             //pos vecs for this block - last elem 0.0f because it adds to vert
                             glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
                             for(const VertexData &v: f.verts)
                             {
                                 glm::vec4 vertPos = v.pos + blockPos;
-                                //positions
+                                /*
                                 vboPos.push_back(vertPos);
-                                vboData.push_back(vertPos);
-                                //colors
                                 vboCol.push_back(vertCol);
-                                vboData.push_back(vertCol);
-                                //normals
                                 vboNor.push_back(glm::vec4(f.dirVec,0.f));
-                                vboData.push_back(glm::vec4(f.dirVec,0.f));
+                                */
+                                vboInter.push_back(vertPos);
+                                vboInter.push_back(vertCol);
+                                vboInter.push_back(glm::vec4(f.dirVec,0.f));
                             }
                             idx.push_back(0 + idxCount);
                             idx.push_back(1 + idxCount);
@@ -84,7 +88,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
             }
         }
     }
-    m_count = idx.size();
+    this->m_count = idx.size();
 }
 
 #if 1
@@ -94,10 +98,16 @@ void Chunk::createVBOdata()
      * m_blocks - all the blocks in this chunk: m_blocks
      * m_neighbors - map from direction to neighbour chunk
      */
+
     generateIdx();
     mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
 
+    generateVBO();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufVBO);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, vboInter.size() * sizeof(glm::vec4), vboInter.data(), GL_STATIC_DRAW);
+
+    /*
     generatePos();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPos);
     mp_context->glBufferData(GL_ARRAY_BUFFER, vboPos.size() * sizeof(glm::vec4), vboPos.data(), GL_STATIC_DRAW);
@@ -109,9 +119,7 @@ void Chunk::createVBOdata()
     generateCol();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufCol);
     mp_context->glBufferData(GL_ARRAY_BUFFER, vboCol.size() * sizeof(glm::vec4), vboCol.data(), GL_STATIC_DRAW);
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> poscol;
-
+    */
 }
 #endif
 

@@ -17,7 +17,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, DEBUG
+    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG
 };
 
 // The six cardinal directions in 3D space
@@ -63,32 +63,33 @@ const static std::array<BlockFace, 6> adjacentFaces {
                                       VertexData(glm::vec4(0,1,1,1)),
                                       VertexData(glm::vec4(0,1,0,1))),
 
-    BlockFace(YPOS, glm::vec3(1,0,0), VertexData(glm::vec4(0,1,1,1)),
+    BlockFace(YPOS, glm::vec3(0,1,0), VertexData(glm::vec4(0,1,1,1)),
                                       VertexData(glm::vec4(1,1,1,1)),
                                       VertexData(glm::vec4(1,1,0,1)),
                                       VertexData(glm::vec4(0,1,0,1))),
 
-    BlockFace(YNEG, glm::vec3(-1,0,0), VertexData(glm::vec4(0,0,0,1)),
+    BlockFace(YNEG, glm::vec3(0,-1,0), VertexData(glm::vec4(0,0,0,1)),
                                       VertexData(glm::vec4(1,0,0,1)),
                                       VertexData(glm::vec4(1,0,1,1)),
                                       VertexData(glm::vec4(0,0,1,1))),
 
-    BlockFace(ZPOS, glm::vec3(1,0,0), VertexData(glm::vec4(0,1,1,1)),
+    BlockFace(ZPOS, glm::vec3(0,0,1), VertexData(glm::vec4(0,1,1,1)),
                                       VertexData(glm::vec4(0,0,1,1)),
                                       VertexData(glm::vec4(1,0,1,1)),
                                       VertexData(glm::vec4(1,1,1,1))),
 
-    BlockFace(ZNEG, glm::vec3(-1,0,0), VertexData(glm::vec4(1,1,0,1)),
+    BlockFace(ZNEG, glm::vec3(0,0,-1), VertexData(glm::vec4(1,1,0,1)),
                                       VertexData(glm::vec4(1,0,0,1)),
                                       VertexData(glm::vec4(0,0,0,1)),
                                       VertexData(glm::vec4(0,1,0,1)))
 };
 
 const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock = {
-  {GRASS, glm::vec4(95.f, 159.f, 53.f,1.0f)/255.f},
-  {DIRT, glm::vec4(121.f, 85.f, 58.f,1.0f) / 255.f},
+  {GRASS, glm::vec4(glm::vec3(95.f, 159.f, 53.f)/255.f, 1.0f)},
+  {DIRT, glm::vec4(glm::vec3(121.f, 85.f, 58.f)/255.f, 1.0f)},
   {STONE, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)},
   {WATER, glm::vec4(0.f, 0.f, 0.75f, 1.0f)},
+  {SNOW, glm::vec4(1.0f)},
   {DEBUG, glm::vec4(1.f, 0.f, 1.f, 1.0f)}
 };
 // One Chunk is a 16 x 256 x 16 section of the world,
@@ -111,13 +112,14 @@ private:
 
     int idxCount = 0;
     std::vector<GLuint> idx;
-    std::vector<glm::vec4> vboData;
-    std::vector<glm::vec4> vboPos;
-    std::vector<glm::vec4> vboNor;
-    std::vector<glm::vec4> vboCol;
+    std::vector<glm::vec4> vboInter;
+//    std::vector<glm::vec4> vboPos;
+//    std::vector<glm::vec4> vboNor;
+//    std::vector<glm::vec4> vboCol;
 
 public:
     Chunk(OpenGLContext*);
+    ~Chunk();
     void createChunkVBOdata(int, int);
     void createVBOdata() override;
     //drawMode is triangles by default

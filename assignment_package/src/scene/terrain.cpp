@@ -1,14 +1,14 @@
 #include "terrain.h"
-#include "cube.h"
 #include <stdexcept>
 #include <iostream>
+using namespace glm;
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), m_geomCube(context), mp_context(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context)
 {}
 
-Terrain::~Terrain() {
-    m_geomCube.destroyVBOdata();
+Terrain::~Terrain()
+{
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -136,7 +136,6 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
     return cPtr;
-    return cPtr;
 }
 
 #if 1
@@ -144,13 +143,11 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 {
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
-//            std::cout << "Terrain Draw: "
-//                      << x << ", " << z << std::endl;
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
             chunk->createChunkVBOdata(x, z);
             chunk->createVBOdata();
             //need to dereference to pass actual object to drawing fn
-            shaderProgram->draw(*chunk);
+            shaderProgram->drawInter(*chunk);
         }
     }
 }
@@ -206,14 +203,12 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 
 void Terrain::CreateTestScene()
 {
-    // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
-//    m_geomCube.createVBOdata();
 
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
+    for(int x = 0; x < 256; x += 16) {
+        for(int z = 0; z < 256; z += 16) {
             instantiateChunkAt(x, z);
         }
     }
@@ -223,8 +218,8 @@ void Terrain::CreateTestScene()
     m_generatedTerrain.insert(toKey(0, 0));
 
     // Create the basic terrain floor
-    for(int x = 0; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
+    for(int x = 0; x < 256; ++x) {
+        for(int z = 0; z < 256; ++z) {
             if((x + z) % 2 == 0) {
                 setBlockAt(x, 128, z, STONE);
             }
