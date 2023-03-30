@@ -5,13 +5,12 @@
 #include <vector>
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
-bool gridMarch_shubh(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
 std::string getName(BlockType t);
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
-      m_flyMode(false), m_isGrounded(false), mcr_camera(m_camera)
+      m_flyMode(true), m_isGrounded(false), mcr_camera(m_camera)
 {}
 
 Player::~Player()
@@ -138,28 +137,32 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     glm::vec3 subdirection;
     glm::vec3 posChange = glm::vec3(0.0f);
 
-    for(int i=0; i<3; ++i){
-        float min_dist = 1000.0f;
-        subdirection = glm::vec3(0);
-        subdirection[i] = pos_offset[i];
-        std::vector<glm::vec3> collisionPoints = getPoints(subdirection);
-        for(const auto &point : collisionPoints){
-            if(gridMarch(point, subdirection, terrain, &out_dist, &out_blockHit)){
-                m_acceleration[i] = 0;
-                m_velocity[i] = 0;
-                if(i == 1 && subdirection[1] <= 0 && out_dist < abs(subdirection[i])){
-                    // the third condition is emperical to make sure that the player doesn't levitate
-                    m_isGrounded = true;
-                    m_acceleration = glm::vec3(0);
-                    subdirection[i] = 0;
+    if(m_flyMode){
+        posChange = pos_offset;
+    } else{
+        for(int i=0; i<3; ++i){
+            float min_dist = 1000.0f;
+            subdirection = glm::vec3(0);
+            subdirection[i] = pos_offset[i];
+            std::vector<glm::vec3> collisionPoints = getPoints(subdirection);
+            for(const auto &point : collisionPoints){
+                if(gridMarch(point, subdirection, terrain, &out_dist, &out_blockHit)){
+                    m_acceleration[i] = 0;
+                    m_velocity[i] = 0;
+                    if(i == 1 && subdirection[1] <= 0 && out_dist < abs(subdirection[i])){
+                        // the third condition is emperical to make sure that the player doesn't levitate
+                        m_isGrounded = true;
+                        m_acceleration = glm::vec3(0);
+                        subdirection[i] = 0;
+                    }
                 }
+                min_dist = glm::min(min_dist, out_dist);
             }
-            min_dist = glm::min(min_dist, out_dist);
-        }
-        if(glm::length(subdirection) != 0){
-            subdirection = glm::normalize(subdirection);
-        }
-        posChange += subdirection * min_dist;
+            if(glm::length(subdirection) != 0){
+                subdirection = glm::normalize(subdirection);
+            }
+            posChange += subdirection * min_dist;
+       }
     }
     moveAlongVector(posChange);
 }
