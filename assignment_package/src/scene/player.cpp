@@ -116,12 +116,6 @@ std::vector<glm::vec3> Player::getPoints(glm::vec3 subdirection){
 }
 
 void Player::computePhysics(float dT, const Terrain &terrain) {
-    /*
-     * TODO: shubh
-     * optimize gridMarch
-     * Click to add and delete a block
-     */
-
     m_isGrounded = false;
 
     float mu = 0.2; // friction coeff
@@ -167,7 +161,6 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
         }
         posChange += subdirection * min_dist;
     }
-//    std::cout << glm::to_string(m_forward) << "  " << glm::to_string(m_camera.getForward()) << std::endl;
     moveAlongVector(posChange);
 }
 
@@ -251,6 +244,7 @@ QString Player::lookAsQString() const {
 }
 
 std::string getName(BlockType t) {
+    // function just used for debugging
     std::string name = "unknown";
     if (t == BlockType::EMPTY) {
         name = "empty";
@@ -268,6 +262,7 @@ std::string getName(BlockType t) {
 
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit) {
+    // NOTE: don't optimise this function for each axis. Will not work with place and break cube functions.
     float maxLen = glm::length(rayDirection); // Farthest we search
     glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin));
     rayDirection = glm::normalize(rayDirection); // Now all t values represent world dist.

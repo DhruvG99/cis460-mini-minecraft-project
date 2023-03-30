@@ -4,6 +4,7 @@
 #include "openglcontext.h"
 #include "shaderprogram.h"
 #include "scene/worldaxes.h"
+#include "scene/crosshair.h"
 #include "scene/camera.h"
 #include "scene/terrain.h"
 #include "scene/player.h"
@@ -18,8 +19,10 @@ class MyGL : public OpenGLContext
     Q_OBJECT
 private:
     WorldAxes m_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
+    Crosshair m_crosshair; // A wireframe for the crosshair at the center of the screen
     ShaderProgram m_progLambert;// A shader program that uses lambertian reflection
     ShaderProgram m_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
+    ShaderProgram m_progFlatCrosshair;// flat shader used to display the crosshair
     ShaderProgram m_progInstanced;// A shader program that is designed to be compatible with instanced rendering
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.

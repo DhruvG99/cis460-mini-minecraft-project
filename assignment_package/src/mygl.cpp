@@ -10,7 +10,8 @@
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
-      m_progLambert(this), m_progFlat(this), m_progInstanced(this),
+      m_crosshair(this),
+      m_progLambert(this), m_progFlat(this), m_progFlatCrosshair(this), m_progInstanced(this),
       m_terrain(this), m_player(glm::vec3(32.f, 135.5f, 10.f), m_terrain), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -56,12 +57,15 @@ void MyGL::initializeGL()
     //Create the instance of the world axes
     m_worldAxes.createVBOdata();
 
+    m_crosshair.setVals(50, width(), height());
+    m_crosshair.createVBOdata();
+
     // Create and set up the diffuse shader
     m_progLambert.create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
-
+    m_progFlatCrosshair.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
@@ -133,7 +137,13 @@ void MyGL::paintGL() {
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progFlat.draw(m_worldAxes);
+
+    m_progFlatCrosshair.setModelMatrix(glm::mat4());
+    m_progFlatCrosshair.setViewProjMatrix(glm::mat4());
+    m_progFlatCrosshair.draw(m_crosshair);
     glEnable(GL_DEPTH_TEST);
+
+
 }
 
 // TODO: Change this so it renders the nine zones of generated
