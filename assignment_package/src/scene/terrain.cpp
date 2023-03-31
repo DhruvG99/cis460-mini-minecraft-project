@@ -206,6 +206,77 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 }
 #endif
 
+vec2 random2(vec2 p ) {
+    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
+}
+float surflet(vec2 P, vec2 gridPoint) {
+    // Compute falloff function by converting linear distance to a polynomial (quintic smootherstep function)
+    float distX = abs(P.x - gridPoint.x);
+    float distY = abs(P.y - gridPoint.y);
+    float tX = 1.0 - 6.0 * pow(distX, 5.0) + 15.0 * pow(distX, 4.0) - 10.0 * pow(distX, 3.0);
+    float tY = 1.0 - 6.0 * pow(distY, 5.0) + 15.0 * pow(distY, 4.0) - 10.0 * pow(distY, 3.0);
+
+    // Get the random vector for the grid point
+    vec2 gradient = random2(gridPoint);
+    // Get the vector from the grid point to P
+    vec2 diff = P - gridPoint;
+    // Get the value of our height field by dotting grid->P with our gradient
+    float height = dot(diff, gradient);
+    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+    return height * tX * tY;
+}
+
+float PerlinNoise(vec2 uv) {
+    // Tile the space
+    vec2 uvXLYL = floor(uv);
+    vec2 uvXHYL = uvXLYL + vec2(1,0);
+    vec2 uvXHYH = uvXLYL + vec2(1,1);
+    vec2 uvXLYH = uvXLYL + vec2(0,1);
+
+    return surflet(uv, uvXLYL) + surflet(uv, uvXHYL) + surflet(uv, uvXHYH) + surflet(uv, uvXLYH);
+}
+
+float worleyNoise(vec2 uv, float f) {
+    uv *= f;
+    vec2 uvint = floor(uv);
+    vec2 uvfract = fract(uv);
+    float minD = 1.f;
+    for(int y=-1; y<=1; y++){
+        for(int x = -1; x<=1; x++) {
+            vec2 neigh = vec2(float(x), float(y));
+            vec2 point = random2(uvint + neigh);
+            vec2 diff = neigh + point - uvfract;
+            float dist = length(diff);
+            minD = glm::min(minD, dist);
+        }
+    }
+    return minD;
+}
+
+int obtainMountainHeight(int x, int z) {
+    vec2 xz = vec2(x, z);
+    float h = 0, amp = 0.5, freq=128.f;
+    for(int i=0; i<4; i++) {
+        float h1 = PerlinNoise(xz/freq);
+        h1 = 1.f - abs(h1); //-> o to 1
+        h += h1*amp;
+        amp *= 0.5;
+        freq *= 0.5;
+    }
+    return floor(h * 128.f);
+}
+
+int obtainGrasslandHeight(int x, int z) {
+    vec2 xz = vec2(x, z);
+    float freq = 70.f;
+    float h = worleyNoise(xz/freq, 0.5);
+    return floor(h * 10.f);
+
+//    float h1 = PerlinNoise(xz/freq);
+//    h1 = 1.f - abs(h1);
+//    return floor(h1 * 20.f);
+}
+
 void Terrain::CreateTestScene()
 {
     int xMin = -256, xMax = 256;
@@ -224,7 +295,49 @@ void Terrain::CreateTestScene()
     //TODO: m2: CHANGE THIS
     m_generatedTerrain.insert(toKey(0, 0));
 
-#if 1
+    // Create the basic terrain floor
+        for(int x = 0; x < 256; ++x) {
+            for(int z = 0; z < 256; ++z) {
+                // Procedural biome - interp the heights - with very low freq
+                int y_m = obtainMountainHeight(x, z);
+                int y_g = obtainGrasslandHeight(x, z);
+                float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
+    //            float t = glm::smoothstep(0.35f, 0.5f, (float)w);
+
+                int interp_h = (int) glm::mix(y_g, y_m, t);
+    //            cout << "height m, g, t, interp height:"<<y_m+128 << " "<<y_g+128 <<" "<< t<< " "<<interp_h + 128 << endl;
+                for (int k = 0; k<=interp_h; k++) {
+                    if (t>0.45) {
+                        // Mountain biome
+                        if (k+128 >= 190 && k == interp_h) {
+                            setBlockAt(x, k+128, z, SNOW);
+                        } else {
+                            setBlockAt(x, k+128, z, STONE);
+                        }
+                    } else {
+                        // Grassland biome
+                        if (k == interp_h) {
+                            setBlockAt(x, k+128, z, GRASS);
+                        }
+                        else {
+                            setBlockAt(x, k+128, z, DIRT);
+                        }
+                    }
+                }
+//                if (interp_h + 128 < 150) {
+//                    // Water level
+//                    for (int k=interp_h+128; k<160; k++) {
+//                        setBlockAt(x, k, z, WATER);
+//                    }
+//                }
+//                for(int k=0; k<128; k++) {
+//                    // Stone bed for the landscape below 128
+//                    setBlockAt(x, k, z, STONE);
+//                }
+            }
+        }
+
+#if 0
     // Create the basic terrain floor
         for(int x = 0; x < 64; ++x) {
             for(int z = 0; z < 64; ++z) {
