@@ -295,6 +295,9 @@ void Terrain::CreateTestScene()
     //TODO: m2: CHANGE THIS
     m_generatedTerrain.insert(toKey(0, 0));
 
+    int base_height = 128;
+    int water_level = 150;
+    int snow_level = 200;
     // Create the basic terrain floor
         for(int x = xMin; x < xMax; ++x) {
             for(int z = zMin; z < zMax; ++z) {
@@ -309,24 +312,25 @@ void Terrain::CreateTestScene()
                 for (int k = 0; k<=interp_h; k++) {
                     if (t>0.45) {
                         // Mountain biome
-                        if (k+128 >= 190 && k == interp_h) {
-                            setBlockAt(x, k+128, z, SNOW);
+                        if (k+base_height >= snow_level && k == interp_h) {
+                            setBlockAt(x, k+base_height, z, SNOW);
                         } else {
-                            setBlockAt(x, k+128, z, STONE);
+                            setBlockAt(x, k+base_height, z, STONE);
                         }
                     } else {
                         // Grassland biome
                         if (k == interp_h) {
-                            setBlockAt(x, k+128, z, GRASS);
+                            setBlockAt(x, k+base_height, z, GRASS);
                         }
                         else {
-                            setBlockAt(x, k+128, z, DIRT);
+                            setBlockAt(x, k+base_height, z, DIRT);
                         }
                     }
                 }
-                if (interp_h + 128 < 150) {
+
+                if (interp_h + base_height < water_level) {
                     // Water level
-                    for (int kw=interp_h+128; kw<160; kw++) {
+                    for (int kw=interp_h+base_height; kw<water_level; kw++) {
                         setBlockAt(x, kw, z, WATER);
                     }
                 }
