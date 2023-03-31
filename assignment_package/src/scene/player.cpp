@@ -5,7 +5,7 @@
 #include <vector>
 
 bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit);
-bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
+bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *interfaceAxis);
 std::string getName(BlockType t);
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
@@ -84,8 +84,6 @@ void Player::processInputs(InputBundle &inputs) {
     else{
         rotateOnUpGlobal(-angle);
     }
-
-
 }
 
 std::vector<glm::vec3> Player::getPoints(glm::vec3 origin, glm::vec3 subdirection){
@@ -195,7 +193,6 @@ bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Te
     return false;
 }
 
-
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {
     m_camera.setWidthHeight(w, h);
 }
@@ -293,7 +290,7 @@ std::string getName(BlockType t) {
 }
 
 
-bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit) {
+bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *out_interfaceAxis) {
     // NOTE: don't optimise this function for each axis. Will not work with place and break cube functions.
     float maxLen = glm::length(rayDirection); // Farthest we search
     glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin));
@@ -317,6 +314,7 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
                 if(axis_t < min_t) {
                     min_t = axis_t;
                     interfaceAxis = i;
+                    *out_interfaceAxis = i;
                 }
             }
         }
@@ -348,19 +346,6 @@ bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terra
 }
 
 
-std::vector<glm::vec3> Player::getNeighs(glm::ivec3 inp_pos){
-    std::vector<glm::vec3> neighs;
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x-1, inp_pos.y, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x+1, inp_pos.y, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y+1, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y-1, inp_pos.z));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z+1));
-    neighs.push_back(glm::vec3(inp_pos.x, inp_pos.y, inp_pos.z-1));
-
-    return neighs;
-}
-
 void Player::placeBlock(Terrain& terrain){
     float detectLength = 3.0f;
     glm::vec3 rayOrigin = m_camera.mcr_position;
@@ -370,22 +355,12 @@ void Player::placeBlock(Terrain& terrain){
     glm::ivec3 out_blockHit;
     float min_dist = 1000.0f;
     glm::ivec3 targetPos;
+    int interfaceAxis;
 
-    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit)){
-        std::vector<glm::vec3> neighs = getNeighs(out_blockHit);
-        for(const auto &neigh : neighs){
-            if (terrain.getBlockAt(neigh.x, neigh.y, neigh.z) == BlockType::EMPTY){
-                glm::vec3 pos = glm::vec3(neigh.x, neigh.y, neigh.z);
-                float distance = glm::length(pos - rayOrigin);
-                if (distance < min_dist){
-                    min_dist = distance;
-                    targetPos = pos;
-                }
-            }
-        }
-
+    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit, &interfaceAxis)){
         BlockType bt = terrain.getBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z);
-        terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, bt);
+        out_blockHit[interfaceAxis] -= glm::sign(rayDirection[interfaceAxis]);
+        terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, bt);
     }
 }
 
@@ -397,21 +372,9 @@ void Player::breakBlock(Terrain& terrain){
 
     float out_dist;
     glm::ivec3 out_blockHit;
-    float min_dist = 1000.0f;
-    glm::ivec3 targetPos;
+    int interfaceAxis;
 
-    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit)){
-        std::vector<glm::vec3> neighs = getNeighs(out_blockHit);
-        for(const auto &neigh : neighs){
-            if (terrain.getBlockAt(neigh.x, neigh.y, neigh.z) != BlockType::EMPTY){
-                glm::vec3 pos = glm::vec3(neigh.x, neigh.y, neigh.z);
-                float distance = glm::length(pos - rayOrigin);
-                if (distance < min_dist){
-                    min_dist = distance;
-                    targetPos = pos;
-                }
-            }
-        }
-        terrain.setBlockAt(targetPos.x, targetPos.y, targetPos.z, BlockType::EMPTY);
+    if (gridMarch(rayOrigin, rayDirection, terrain, &out_dist, &out_blockHit, &interfaceAxis)){
+        terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, BlockType::EMPTY);
     }
 }
