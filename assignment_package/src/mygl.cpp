@@ -163,9 +163,11 @@ void MyGL::renderTerrain() {
 }
 
 void MyGL::keyPressEvent(QKeyEvent *e) {
-    float amount = 2.0f;
     if(e->modifiers() & Qt::ShiftModifier){
-        amount = 10.0f;
+        m_inputs.shiftPressed = true;
+    }
+    else{
+        m_inputs.shiftPressed = false;
     }
 
     if (e->key() == Qt::Key_Escape) {
