@@ -279,8 +279,8 @@ int obtainGrasslandHeight(int x, int z) {
 
 void Terrain::CreateTestScene()
 {
-    int xMin = -256, xMax = 256;
-    int zMin = -256, zMax = 256;
+    int xMin = 0, xMax = 256;
+    int zMin = 0, zMax = 256;
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
@@ -296,8 +296,8 @@ void Terrain::CreateTestScene()
     m_generatedTerrain.insert(toKey(0, 0));
 
     // Create the basic terrain floor
-        for(int x = 0; x < 256; ++x) {
-            for(int z = 0; z < 256; ++z) {
+        for(int x = xMin; x < xMax; ++x) {
+            for(int z = zMin; z < zMax; ++z) {
                 // Procedural biome - interp the heights - with very low freq
                 int y_m = obtainMountainHeight(x, z);
                 int y_g = obtainGrasslandHeight(x, z);
@@ -324,15 +324,15 @@ void Terrain::CreateTestScene()
                         }
                     }
                 }
-//                if (interp_h + 128 < 150) {
-//                    // Water level
-//                    for (int k=interp_h+128; k<160; k++) {
-//                        setBlockAt(x, k, z, WATER);
-//                    }
-//                }
-//                for(int k=0; k<128; k++) {
+                if (interp_h + 128 < 150) {
+                    // Water level
+                    for (int kw=interp_h+128; kw<160; kw++) {
+                        setBlockAt(x, kw, z, WATER);
+                    }
+                }
+//                for(int ks=0; ks<128; ks++) {
 //                    // Stone bed for the landscape below 128
-//                    setBlockAt(x, k, z, STONE);
+//                    setBlockAt(x, ks, z, STONE);
 //                }
             }
         }
