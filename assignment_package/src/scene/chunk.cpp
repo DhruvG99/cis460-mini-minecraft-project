@@ -22,6 +22,8 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
 //    vboNor.clear();
 //    vboCol.clear();
     //remove triple iteration?
+
+    //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 256; ++j) {
             for(int k = 0; k < 16; ++k) {
@@ -37,6 +39,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                          * testing if the face is on a bordering chunk
                          * and then assigning to adjacent block
                         */
+
                         if(testBorder.x >=16.f || testBorder.y >=256.f || testBorder.z >=16.f ||
                                 testBorder.x < 0.0f || testBorder.y < 0.0f || testBorder.z < 0.f)
                         {
@@ -53,6 +56,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                         //face is in the same chunk
                         else
                             adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
+
 
                         //possibly check if the adjBlock is water?
                         if(adjBlock==EMPTY)

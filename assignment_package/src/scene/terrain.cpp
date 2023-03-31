@@ -1,6 +1,8 @@
 #include "terrain.h"
 #include <stdexcept>
 #include <iostream>
+#include <chrono>
+using namespace std::chrono;
 using namespace glm;
 
 Terrain::Terrain(OpenGLContext *context)
@@ -139,15 +141,18 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 }
 
 #if 1
+//TODO: draw chunk border
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
 {
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            chunk->createChunkVBOdata(x, z);
-            chunk->createVBOdata();
-            //need to dereference to pass actual object to drawing fn
-            shaderProgram->drawInter(*chunk);
+            if(chunk!=nullptr)
+            {
+                chunk->createChunkVBOdata(x, z);
+                chunk->createVBOdata();
+                shaderProgram->drawInter(*chunk);
+            }
         }
     }
 }
@@ -203,23 +208,25 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
 
 void Terrain::CreateTestScene()
 {
-
+    int xMin = -256, xMax = 256;
+    int zMin = -256, zMax = 256;
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
-    for(int x = 0; x < 256; x += 16) {
-        for(int z = 0; z < 256; z += 16) {
+    for(int x = xMin; x < xMax; x += 16) {
+        for(int z = zMin; z < zMax; z += 16) {
             instantiateChunkAt(x, z);
         }
     }
     // Tell our existing terrain set that
     // the "generated terrain zone" at (0,0)
     // now exists.
+    //TODO: m2: CHANGE THIS
     m_generatedTerrain.insert(toKey(0, 0));
 
     // Create the basic terrain floor
-    for(int x = 0; x < 256; ++x) {
-        for(int z = 0; z < 256; ++z) {
+    for(int x = xMin; x < xMax; ++x) {
+        for(int z = zMin; z < zMax; ++z) {
             if((x + z) % 2 == 0) {
                 setBlockAt(x, 128, z, STONE);
             }
@@ -239,4 +246,5 @@ void Terrain::CreateTestScene()
     for(int y = 129; y < 140; ++y) {
         setBlockAt(32, y, 32, WATER);
     }
+
 }

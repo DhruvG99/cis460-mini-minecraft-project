@@ -65,11 +65,15 @@ void MyGL::initializeGL()
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
     // and UV coordinates
-    m_progLambert.setGeometryColor(glm::vec4(0,1,0,1));
+//    m_progLambert.setGeometryColor(glm::vec4(0,1,0,1));
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     glBindVertexArray(vao);
+
+
+    m_player.rotateOnRightLocal(-60.f);
+    m_player.moveForwardLocal(-50.f);
 
     m_terrain.CreateTestScene();
 }
@@ -119,7 +123,8 @@ void MyGL::paintGL() {
 
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+//    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
+    m_progLambert.setModelMatrix(glm::mat4());
 
     renderTerrain();
 
@@ -134,9 +139,12 @@ void MyGL::paintGL() {
 // terrain that surround the player (refer to Terrain::m_generatedTerrain
 // for more info)
 void MyGL::renderTerrain() {
-    m_terrain.draw(0, 256, 0, 256, &m_progInstanced);
+    glm::vec3 currPos = m_player.mcr_position;
+    int currX = static_cast<int>(glm::floor(currPos.x / 16.f));
+    int currZ = static_cast<int>(glm::floor(currPos.z / 16.f));
+    //for 3 by 3 chunks around player
+    m_terrain.draw(16*currX-16, 16*currX+32, 16*currZ-16, 16*currZ+32, &m_progLambert);
 }
-
 
 void MyGL::keyPressEvent(QKeyEvent *e) {
     float amount = 2.0f;

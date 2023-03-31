@@ -98,8 +98,6 @@ const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock =
 // recomputing its VBO data faster by not having to
 // render all the world at once, while also not having
 // to render the world block by block.
-
-// TODO have Chunk inherit from Drawable
 class Chunk : public Drawable {
 private:
     // All of the blocks contained within this Chunk
