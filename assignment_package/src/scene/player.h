@@ -50,7 +50,7 @@ public:
 
     void placeBlock(Terrain&);
     void breakBlock(Terrain&);
-    std::vector<glm::vec3> getPoints(glm::vec3 subdirection);
+    std::vector<glm::vec3> getPoints(glm::vec3 origin, glm::vec3 subdirection);
     std::vector<glm::vec3> getNeighs(glm::ivec3 inp_pos);
 
     // For sending the Player's data to the GUI

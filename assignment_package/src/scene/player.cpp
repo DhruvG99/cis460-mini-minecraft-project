@@ -4,6 +4,7 @@
 #include <string.h>
 #include <vector>
 
+bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit);
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit);
 std::string getName(BlockType t);
 
@@ -87,32 +88,28 @@ void Player::processInputs(InputBundle &inputs) {
 
 }
 
-std::vector<glm::vec3> Player::getPoints(glm::vec3 subdirection){
+
+std::vector<glm::vec3> Player::getPoints(glm::vec3 origin, glm::vec3 subdirection){
     std::vector<glm::vec3> vertexPos;
 
-    if(subdirection.y != 0){ // only check the bottom 4 points if checking for ground
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z));
-    } else{ // check all the 12 points
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z+1));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z+1));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z+1));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z+1));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y, m_position.z+2));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y, m_position.z+2));
-        vertexPos.push_back(glm::vec3(m_position.x, m_position.y+1, m_position.z+2));
-        vertexPos.push_back(glm::vec3(m_position.x+1, m_position.y+1, m_position.z+2));
+    if(subdirection.y != 0){ // only check the bottom cube
+        vertexPos.push_back(glm::vec3(origin.x, origin.y, origin.z));
+    } else if(subdirection.z != 0){ // check nearby cubes too
+        vertexPos.push_back(glm::vec3(origin.x, origin.y, origin.z));
+        vertexPos.push_back(glm::vec3(origin.x+1, origin.y, origin.z));
+        vertexPos.push_back(glm::vec3(origin.x, origin.y+1, origin.z));
+        vertexPos.push_back(glm::vec3(origin.x+1, origin.y+1, origin.z));
+    } else{
+        vertexPos.push_back(glm::vec3(origin.x, origin.y, origin.z));
+        vertexPos.push_back(glm::vec3(origin.x, origin.y, origin.z+1));
+        vertexPos.push_back(glm::vec3(origin.x, origin.y+1, origin.z));
+        vertexPos.push_back(glm::vec3(origin.x, origin.y+1, origin.z+1));
     }
 
     return vertexPos;
 
 }
+
 
 void Player::computePhysics(float dT, const Terrain &terrain) {
     m_isGrounded = false;
@@ -136,6 +133,7 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     glm::ivec3 out_blockHit;
     glm::vec3 subdirection;
     glm::vec3 posChange = glm::vec3(0.0f);
+    glm::vec3 pos_origin = (glm::vec3(m_position.x-0.5, m_position.y, m_position.z-0.5));
 
     if(m_flyMode){
         posChange = pos_offset;
@@ -144,17 +142,20 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
             float min_dist = 1000.0f;
             subdirection = glm::vec3(0);
             subdirection[i] = pos_offset[i];
-            std::vector<glm::vec3> collisionPoints = getPoints(subdirection);
+            std::vector<glm::vec3> collisionPoints = getPoints(pos_origin, subdirection);
             for(const auto &point : collisionPoints){
-                if(gridMarch(point, subdirection, terrain, &out_dist, &out_blockHit)){
+                if(checkCollision(point, subdirection, i, terrain, out_dist, out_blockHit)){
                     m_acceleration[i] = 0;
                     m_velocity[i] = 0;
-                    if(i == 1 && subdirection[1] <= 0 && out_dist < abs(subdirection[i])){
-                        // the third condition is emperical to make sure that the player doesn't levitate
+                    if(i == 1 && subdirection[1] <= 0){
                         m_isGrounded = true;
                         m_acceleration = glm::vec3(0);
-                        subdirection[i] = 0;
+                    }else{
+//                        std::cout << glm::to_string(pos_origin)  << "  " << glm::to_string(point) << "  "  << glm::to_string(subdirection) << "  "  << out_dist << std::endl;
                     }
+                }
+                else if(abs(subdirection[1]) > 0.1 ){
+//                    std::cout << "----  " << glm::to_string(pos_offset) << std::endl;
                 }
                 min_dist = glm::min(min_dist, out_dist);
             }
@@ -165,7 +166,35 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
        }
     }
     moveAlongVector(posChange);
+//    std::cout << glm::to_string(glm::ivec3(glm::vec3(3.999,2,1))) << std::endl;
+//    bool collided = checkCollision(glm::vec3(32,129,30.5), glm::vec3(0,-1,0), 1, terrain, out_dist, out_blockHit);
+//    std::cout << collided << "  "  << glm::to_string(out_blockHit) << "  "  << out_dist << std::endl;
+
+
 }
+
+
+bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit){
+    glm::ivec3 currCell = glm::ivec3(origin);
+    float distanceMoved = (origin[axis] - currCell[axis]) * (-1 * glm::sign(rayDirection[axis]));
+    float maxDist = abs(rayDirection[axis]);
+
+    while(distanceMoved < maxDist){
+        currCell[axis] += glm::sign(rayDirection[axis]);
+        if(terrain.getBlockAt(currCell.x, currCell.y, currCell.z) != EMPTY) {
+            out_blockHit = currCell;
+            out_dist = glm::max(0.f,distanceMoved);
+            out_dist = distanceMoved;
+            return true;
+        }
+        distanceMoved += 1;
+    }
+
+    out_dist = maxDist;
+    return false;
+
+}
+
 
 void Player::setCameraWidthHeight(unsigned int w, unsigned int h) {
     m_camera.setWidthHeight(w, h);
