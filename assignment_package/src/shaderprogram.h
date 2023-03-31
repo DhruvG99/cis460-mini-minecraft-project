@@ -39,6 +39,8 @@ public:
     void setGeometryColor(glm::vec4 color);
     // Draw the given object to our screen using this ShaderProgram's shaders
     void draw(Drawable &d);
+    // Draw the given object to our screen using interleaved VBO
+    void drawInter(Drawable &d);
     // Draw the given object to our screen multiple times using instanced rendering
     void drawInstanced(InstancedDrawable &d);
     // Utility function used in create()

@@ -28,6 +28,11 @@ private:
     // glm::ivec2s are not hashable by default, so they cannot be used as keys.
     std::unordered_map<int64_t, uPtr<Chunk>> m_chunks;
 
+    // 256*256*256
+    //
+    // 48*256*48 blocks
+
+    // 9 Chunks: 16*3 by 16*3
     // We will designate every 64 x 64 area of the world's x-z plane
     // as one "terrain generation zone". Every time the player moves
     // near a portion of the world that has not yet been generated
@@ -50,7 +55,7 @@ private:
     // for every non-EMPTY block within its Chunks. This is horribly
     // inefficient, and will cause your game to run very slowly until
     // milestone 1's Chunk VBO setup is completed.
-    Cube m_geomCube;
+//    Cube m_geomCube;
 
     OpenGLContext* mp_context;
 

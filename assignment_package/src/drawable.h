@@ -9,12 +9,14 @@ class Drawable
 protected:
     int m_count;     // The number of indices stored in bufIdx.
     GLuint m_bufIdx; // A Vertex Buffer Object that we will use to store triangle indices (GLuints)
+    GLuint m_bufVBO; //VBO to store collated data
     GLuint m_bufPos; // A Vertex Buffer Object that we will use to store mesh vertices (vec4s)
     GLuint m_bufNor; // A Vertex Buffer Object that we will use to store mesh normals (vec4s)
     GLuint m_bufCol; // Can be used to pass per-vertex color information to the shader, but is currently unused.
                    // Instead, we use a uniform vec4 in the shader to set an overall color for the geometry
 
     bool m_idxGenerated; // Set to TRUE by generateIdx(), returned by bindIdx().
+    bool m_vboGenerated;
     bool m_posGenerated;
     bool m_norGenerated;
     bool m_colGenerated;
@@ -38,11 +40,13 @@ public:
     // Call these functions when you want to call glGenBuffers on the buffers stored in the Drawable
     // These will properly set the values of idxBound etc. which need to be checked in ShaderProgram::draw()
     void generateIdx();
+    void generateVBO();
     void generatePos();
     void generateNor();
     void generateCol();
 
     bool bindIdx();
+    bool bindVBO();
     bool bindPos();
     bool bindNor();
     bool bindCol();

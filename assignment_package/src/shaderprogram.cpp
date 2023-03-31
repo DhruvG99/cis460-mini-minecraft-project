@@ -4,7 +4,7 @@
 #include <QTextStream>
 #include <QDebug>
 #include <stdexcept>
-
+#include <iostream>
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
@@ -167,6 +167,49 @@ void ShaderProgram::draw(Drawable &d)
     if (attrCol != -1 && d.bindCol()) {
         context->glEnableVertexAttribArray(attrCol);
         context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 0, NULL);
+    }
+
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdx();
+    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+
+    context->printGLErrorLog();
+}
+
+void ShaderProgram::drawInter(Drawable &d)
+{
+    useMe();
+
+    if(d.elemCount() < 0) {
+        throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+
+    /*
+     * For VBO data that is stored as:
+     * <vec4>pos, <vec4>nor, <vec4>col
+     */
+    if (d.bindVBO())
+    {
+        if(attrPos != -1)
+        {
+            context->glEnableVertexAttribArray(attrPos);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)0);
+        }
+        if(attrCol != -1)
+        {
+            context->glEnableVertexAttribArray(attrCol);
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+        }
+        if(attrNor != -1)
+        {
+            context->glEnableVertexAttribArray(attrNor);
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)(2*sizeof(glm::vec4)));
+        }
     }
 
     // Bind the index buffer and then draw shapes from it.

@@ -1,14 +1,16 @@
 #include "terrain.h"
-#include "cube.h"
 #include <stdexcept>
 #include <iostream>
+#include <chrono>
+using namespace std::chrono;
+using namespace glm;
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), m_geomCube(context), mp_context(context)
+    : m_chunks(), m_generatedTerrain(), mp_context(context)
 {}
 
-Terrain::~Terrain() {
-    m_geomCube.destroyVBOdata();
+Terrain::~Terrain()
+{
 }
 
 // Combine two 32-bit ints into one 64-bit int
@@ -115,9 +117,9 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>();
+    uPtr<Chunk> chunk = mkU<Chunk>(this->mp_context);
     Chunk *cPtr = chunk.get();
-    m_chunks[toKey(x, z)] = move(chunk);
+    m_chunks[toKey(x, z)] = std::move(chunk);
     // Set the neighbor pointers of itself and its neighbors
     if(hasChunkAt(x, z + 16)) {
         auto &chunkNorth = m_chunks[toKey(x, z + 16)];
@@ -136,12 +138,28 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
         cPtr->linkNeighbor(chunkWest, XNEG);
     }
     return cPtr;
-    return cPtr;
 }
 
-// TODO: When you make Chunk inherit from Drawable, change this code so
-// it draws each Chunk with the given ShaderProgram, remembering to set the
-// model matrix to the proper X and Z translation!
+#if 1
+//TODO: draw chunk border
+void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
+{
+    for(int x = minX; x < maxX; x += 16) {
+        for(int z = minZ; z < maxZ; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            if(chunk!=nullptr)
+            {
+                chunk->createChunkVBOdata(x, z);
+                chunk->createVBOdata();
+                shaderProgram->drawInter(*chunk);
+            }
+        }
+    }
+}
+#endif
+
+#if 0
+//USE THE BELOW TO REDO ABOVE. call draw at end of every chunk for loop
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
     m_geomCube.clearOffsetBuf();
     m_geomCube.clearColorBuf();
@@ -186,28 +204,29 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     m_geomCube.createInstancedVBOdata(offsets, colors);
     shaderProgram->drawInstanced(m_geomCube);
 }
+#endif
 
 void Terrain::CreateTestScene()
 {
-    // TODO: DELETE THIS LINE WHEN YOU DELETE m_geomCube!
-    m_geomCube.createVBOdata();
-
+    int xMin = -256, xMax = 256;
+    int zMin = -256, zMax = 256;
     // Create the Chunks that will
     // store the blocks for our
     // initial world space
-    for(int x = 0; x < 64; x += 16) {
-        for(int z = 0; z < 64; z += 16) {
+    for(int x = xMin; x < xMax; x += 16) {
+        for(int z = zMin; z < zMax; z += 16) {
             instantiateChunkAt(x, z);
         }
     }
     // Tell our existing terrain set that
     // the "generated terrain zone" at (0,0)
     // now exists.
+    //TODO: m2: CHANGE THIS
     m_generatedTerrain.insert(toKey(0, 0));
 
     // Create the basic terrain floor
-    for(int x = 0; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
+    for(int x = xMin; x < xMax; ++x) {
+        for(int z = zMin; z < zMax; ++z) {
             if((x + z) % 2 == 0) {
                 setBlockAt(x, 128, z, STONE);
             }
@@ -225,6 +244,7 @@ void Terrain::CreateTestScene()
     }
     // Add a central column
     for(int y = 129; y < 140; ++y) {
-        setBlockAt(32, y, 32, GRASS);
+        setBlockAt(32, y, 32, WATER);
     }
+
 }

@@ -18,6 +18,7 @@ glm::vec4 GetCubeNormal(const glm::vec4& P)
     glm::vec4 N(0,0,0,0);
     N[idx] = glm::sign(P[idx]);
     return N;
+
 }
 
 //These are functions that are only defined in this cpp file. They're used for organizational purposes
