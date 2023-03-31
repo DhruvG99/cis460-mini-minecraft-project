@@ -12,16 +12,13 @@ Chunk::~Chunk()
 {
     this->destroyVBOdata();
 }
+
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
 void Chunk::createChunkVBOdata(int xChunk, int zChunk)
 {
     idxCount = 0;
     idx.clear();
     vboInter.clear();
-//    vboPos.clear();
-//    vboNor.clear();
-//    vboCol.clear();
-    //remove triple iteration?
 
     //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
@@ -39,7 +36,6 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                          * testing if the face is on a bordering chunk
                          * and then assigning to adjacent block
                         */
-
                         if(testBorder.x >=16.f || testBorder.y >=256.f || testBorder.z >=16.f ||
                                 testBorder.x < 0.0f || testBorder.y < 0.0f || testBorder.z < 0.f)
                         {
@@ -58,7 +54,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                             adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
 
 
-                        //possibly check if the adjBlock is water?
+                        //possibly check if the adjBlock is water? (transparency)
                         if(adjBlock==EMPTY)
                         {
                             glm::vec4 vertCol = colorFromBlock.at(DEBUG);
@@ -70,11 +66,6 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
                             for(const VertexData &v: f.verts)
                             {
                                 glm::vec4 vertPos = v.pos + blockPos;
-                                /*
-                                vboPos.push_back(vertPos);
-                                vboCol.push_back(vertCol);
-                                vboNor.push_back(glm::vec4(f.dirVec,0.f));
-                                */
                                 vboInter.push_back(vertPos);
                                 vboInter.push_back(vertCol);
                                 vboInter.push_back(glm::vec4(f.dirVec,0.f));
@@ -98,11 +89,6 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
 #if 1
 void Chunk::createVBOdata()
 {
-    /*what we have:
-     * m_blocks - all the blocks in this chunk: m_blocks
-     * m_neighbors - map from direction to neighbour chunk
-     */
-
     generateIdx();
     mp_context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_bufIdx);
     mp_context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
@@ -110,20 +96,6 @@ void Chunk::createVBOdata()
     generateVBO();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufVBO);
     mp_context->glBufferData(GL_ARRAY_BUFFER, vboInter.size() * sizeof(glm::vec4), vboInter.data(), GL_STATIC_DRAW);
-
-    /*
-    generatePos();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufPos);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, vboPos.size() * sizeof(glm::vec4), vboPos.data(), GL_STATIC_DRAW);
-
-    generateNor();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufNor);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, vboNor.size() * sizeof(glm::vec4), vboNor.data(), GL_STATIC_DRAW);
-
-    generateCol();
-    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufCol);
-    mp_context->glBufferData(GL_ARRAY_BUFFER, vboCol.size() * sizeof(glm::vec4), vboCol.data(), GL_STATIC_DRAW);
-    */
 }
 #endif
 

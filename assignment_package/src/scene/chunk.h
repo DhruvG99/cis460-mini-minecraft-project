@@ -84,6 +84,7 @@ const static std::array<BlockFace, 6> adjacentFaces {
                                       VertexData(glm::vec4(0,1,0,1)))
 };
 
+//color map to easily retrieve colors of different blocks
 const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock = {
   {GRASS, glm::vec4(glm::vec3(95.f, 159.f, 53.f)/255.f, 1.0f)},
   {DIRT, glm::vec4(glm::vec3(121.f, 85.f, 58.f)/255.f, 1.0f)},
@@ -111,9 +112,6 @@ private:
     int idxCount = 0;
     std::vector<GLuint> idx;
     std::vector<glm::vec4> vboInter;
-//    std::vector<glm::vec4> vboPos;
-//    std::vector<glm::vec4> vboNor;
-//    std::vector<glm::vec4> vboCol;
 
 public:
     Chunk(OpenGLContext*);

@@ -142,7 +142,7 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 }
 
 #if 1
-//TODO: draw chunk border
+//TODO: m2: draw chunk border
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
 {
     for(int x = minX; x < maxX; x += 16) {
@@ -158,55 +158,6 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     }
 }
 #endif
-
-#if 0
-//USE THE BELOW TO REDO ABOVE. call draw at end of every chunk for loop
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram) {
-    m_geomCube.clearOffsetBuf();
-    m_geomCube.clearColorBuf();
-
-    std::vector<glm::vec3> offsets, colors;
-
-    for(int x = minX; x < maxX; x += 16) {
-        for(int z = minZ; z < maxZ; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            for(int i = 0; i < 16; ++i) {
-                for(int j = 0; j < 256; ++j) {
-                    for(int k = 0; k < 16; ++k) {
-                        BlockType t = chunk->getBlockAt(i, j, k);
-
-                        if(t != EMPTY) {
-                            offsets.push_back(glm::vec3(i+x, j, k+z));
-                            switch(t) {
-                            case GRASS:
-                                colors.push_back(glm::vec3(95.f, 159.f, 53.f) / 255.f);
-                                break;
-                            case DIRT:
-                                colors.push_back(glm::vec3(121.f, 85.f, 58.f) / 255.f);
-                                break;
-                            case STONE:
-                                colors.push_back(glm::vec3(0.5f));
-                                break;
-                            case WATER:
-                                colors.push_back(glm::vec3(0.f, 0.f, 0.75f));
-                                break;
-                            default:
-                                // Other block types are not yet handled, so we default to debug purple
-                                colors.push_back(glm::vec3(1.f, 0.f, 1.f));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    m_geomCube.createInstancedVBOdata(offsets, colors);
-    shaderProgram->drawInstanced(m_geomCube);
-}
-#endif
-
 
 vec2 random2(vec2 p ) {
     return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
@@ -366,36 +317,6 @@ void Terrain::CreateTestScene()
                     setBlockAt(x, kw, z, WATER);
                 }
             }
-//                for(int ks=0; ks<128; ks++) {
-//                    // Stone bed for the landscape below 128
-//                    setBlockAt(x, ks, z, STONE);
-//                }
         }
     }
-
-
-#if 0
-    // Create the basic terrain floor
-        for(int x = 0; x < 64; ++x) {
-            for(int z = 0; z < 64; ++z) {
-                if((x + z) % 2 == 0) {
-                    setBlockAt(x, 128, z, STONE);
-                }
-                else {
-                    setBlockAt(x, 128, z, DIRT);
-                }
-            }
-        }
-        // Add "walls" for collision testing
-        for(int x = 0; x < 64; ++x) {
-            setBlockAt(x, 129, 0, GRASS);
-            setBlockAt(x, 130, 0, GRASS);
-            setBlockAt(x, 129, 63, GRASS);
-            setBlockAt(0, 130, x, GRASS);
-        }
-        // Add a central column
-        for(int y = 129; y < 140; ++y) {
-            setBlockAt(32, y, 32, GRASS);
-        }
-#endif
 }
