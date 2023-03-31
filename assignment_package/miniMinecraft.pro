@@ -1,4 +1,4 @@
-QT += widgets
+QT += widgets openglwidgets
 
 TARGET = MiniMinecraft
 TEMPLATE = app

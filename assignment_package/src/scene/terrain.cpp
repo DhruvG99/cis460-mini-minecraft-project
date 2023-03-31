@@ -224,27 +224,28 @@ void Terrain::CreateTestScene()
     //TODO: m2: CHANGE THIS
     m_generatedTerrain.insert(toKey(0, 0));
 
+#if 1
     // Create the basic terrain floor
-    for(int x = xMin; x < xMax; ++x) {
-        for(int z = zMin; z < zMax; ++z) {
-            if((x + z) % 2 == 0) {
-                setBlockAt(x, 128, z, STONE);
-            }
-            else {
-                setBlockAt(x, 128, z, DIRT);
+        for(int x = 0; x < 64; ++x) {
+            for(int z = 0; z < 64; ++z) {
+                if((x + z) % 2 == 0) {
+                    setBlockAt(x, 128, z, STONE);
+                }
+                else {
+                    setBlockAt(x, 128, z, DIRT);
+                }
             }
         }
-    }
-    // Add "walls" for collision testing
-    for(int x = 0; x < 64; ++x) {
-        setBlockAt(x, 129, 0, GRASS);
-        setBlockAt(x, 130, 0, GRASS);
-        setBlockAt(x, 129, 63, GRASS);
-        setBlockAt(0, 130, x, GRASS);
-    }
-    // Add a central column
-    for(int y = 129; y < 140; ++y) {
-        setBlockAt(32, y, 32, WATER);
-    }
-
+        // Add "walls" for collision testing
+        for(int x = 0; x < 64; ++x) {
+            setBlockAt(x, 129, 0, GRASS);
+            setBlockAt(x, 130, 0, GRASS);
+            setBlockAt(x, 129, 63, GRASS);
+            setBlockAt(0, 130, x, GRASS);
+        }
+        // Add a central column
+        for(int y = 129; y < 140; ++y) {
+            setBlockAt(32, y, 32, GRASS);
+        }
+#endif
 }
