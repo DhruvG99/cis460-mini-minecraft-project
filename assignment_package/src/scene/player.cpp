@@ -24,7 +24,7 @@ void Player::tick(float dT, InputBundle &input) {
 
 void Player::processInputs(InputBundle &inputs) {
     float speedMod;
-    if(inputs.shiftPressed){
+    if(inputs.shiftPressed){ // move the player fast when shift is pressed
         speedMod = 400.0f;
     }
     else{
@@ -33,7 +33,7 @@ void Player::processInputs(InputBundle &inputs) {
 
 
     if(m_flyMode == false && m_isGrounded == false){
-        m_acceleration = glm::vec3(0, -2.5*speedMod, 0);
+        m_acceleration = glm::vec3(0, -2.5*speedMod, 0); // apply gravity
     } else{
         m_acceleration = glm::vec3(0);
     }
@@ -148,14 +148,14 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     glm::vec3 pos_origin = (glm::vec3(m_position.x-0.5, m_position.y, m_position.z-0.5));
 
     if(m_flyMode){
-        posChange = pos_offset;
+        posChange = pos_offset; // no collision in flight mode
     } else{
-        for(int i=0; i<3; ++i){
+        for(int i=0; i<3; ++i){ // check collision on each axis
             float min_dist = 1000.0f;
             subdirection = glm::vec3(0);
             subdirection[i] = pos_offset[i];
             std::vector<glm::vec3> collisionPoints = getPoints(pos_origin, subdirection);
-            for(const auto &point : collisionPoints){
+            for(const auto &point : collisionPoints){ // check for each vertex in the body
                 if(checkCollision(point, subdirection, i, terrain, out_dist, out_blockHit)){
                     m_acceleration[i] = 0;
                     m_velocity[i] = 0;
@@ -180,6 +180,7 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
 
 
 bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit){
+    // Custom implementation ofgridMarch algorithm for individual axis. Runs faster and doesn't have bugs.
     glm::vec3 currCell = glm::floor(origin);
     float distanceMoved = (origin[axis] - currCell[axis]) * (-1 * glm::sign(rayDirection[axis]));
     float maxDist = abs(rayDirection[axis]);
@@ -299,7 +300,6 @@ std::string getName(BlockType t) {
 
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *out_interfaceAxis) {
-    // NOTE: don't optimise this function for each axis. Will not work with place and break cube functions.
     float maxLen = glm::length(rayDirection); // Farthest we search
     glm::ivec3 currCell = glm::ivec3(glm::floor(rayOrigin));
     rayDirection = glm::normalize(rayDirection); // Now all t values represent world dist.
