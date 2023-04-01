@@ -20,7 +20,7 @@ https://www.shadertoy.com/view/3lcGRX
 https://www.shadertoy.com/view/tlKXzh  
 https://github.com/dafarry/python-fractal-landscape  
 
-### Terrain Rendering and Chunking - Dhruv
+### Terrain Rendering and Chunking - Dhruv Gupta
 Chunking and Mesh Generation - 
 moved the iteration over the chunk coordinates from the terrain generation to chunk.cpp's createChunkVBOdata. Taking inspiration from Adam's implementation, I created a couple of structures - VertexData and BlockFace - to create a standard resource of each of the 6 faces' coordinates. For a given coordinate/block in the chunk, we iterate over the faces and create its VBO data based on whether the adjacent block is EMPTY or not. To obtain the adjacent block we go travel a unit distance in the face's normal and check if it enters a new chunk as well.
 I've also create a colorMapFromBlock which returns the color based on the block type. This removes the need for the multiple if/switch statements while adding colors.
