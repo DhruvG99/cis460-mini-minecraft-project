@@ -33,7 +33,7 @@ void Player::processInputs(InputBundle &inputs) {
 
 
     if(m_flyMode == false && m_isGrounded == false){
-        m_acceleration = glm::vec3(0, -2.5*speedMod, 0); // apply gravity
+        m_acceleration = glm::vec3(0, -1.75*speedMod, 0); // apply gravity
     } else{
         m_acceleration = glm::vec3(0);
     }
@@ -68,7 +68,7 @@ void Player::processInputs(InputBundle &inputs) {
     if(m_isGrounded){
         m_acceleration.y = 0;
         if(inputs.spacePressed){ // can only jump on the ground
-            m_acceleration.y += 30  * speedMod;
+            m_acceleration.y += 20  * speedMod;
         }
     }
 
