@@ -1,0 +1,8 @@
+Mar 29, 2023: Perlin noise functions: 
+https://www.shadertoy.com/view/tlKXzh 
+
+Mar 30, 2023: Fractal noise functions visualisation
+https://www.shadertoy.com/view/3lcGRX  
+
+Mar 30, 2023: Fractal Noise examples and use cases
+https://github.com/dafarry/python-fractal-landscape  
