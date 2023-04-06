@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <cstddef>
 
+#define BLK_UVX * 0.0625f
+#define BLK_UVY * 0.0625f
+
 //= 1/32; Will be helpful later on to obtain texture from the texture pack using local coords
 //#define BLK_UV 0.03125f
 
@@ -23,7 +26,7 @@ enum BlockType : unsigned char
 // The six cardinal directions in 3D space
 enum Direction : unsigned char
 {
-    XPOS, XNEG, YPOS, YNEG, ZPOS, ZNEG
+        XPOS, XNEG, YPOS, YNEG, ZPOS, ZNEG
 };
 
 // Lets us use any enum class as the key of a
@@ -93,6 +96,65 @@ const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock =
   {SNOW, glm::vec4(1.0f)},
   {DEBUG, glm::vec4(1.f, 0.f, 1.f, 1.0f)}
 };
+
+// map for textures
+const static std::unordered_map<BlockType, std::unordered_map<Direction, glm::vec2, EnumHash>, EnumHash> BlockFaceUVs = {
+    {GRASS, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(3.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {XNEG, glm::vec2(3.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {YPOS, glm::vec2(8.f BLK_UVX , 13.f BLK_UVY)},
+                                                                 {YNEG, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {ZPOS, glm::vec2(3.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {ZNEG, glm::vec2(3.f BLK_UVX , 15.f BLK_UVY)}
+                                                               },
+     },
+
+     {DIRT, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                {XNEG, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                {YPOS, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                {YNEG, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                {ZPOS, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)},
+                                                                {ZNEG, glm::vec2(2.f BLK_UVX , 15.f BLK_UVY)}
+                                                              },
+     },
+
+     {STONE, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {XNEG, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {YPOS, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {YNEG, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {ZPOS, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)},
+                                                                 {ZNEG, glm::vec2(1.f BLK_UVX , 15.f BLK_UVY)}
+                                                               },
+     },
+
+     {WATER, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)},
+                                                                 {XNEG, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)},
+                                                                 {YPOS, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)},
+                                                                 {YNEG, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)},
+                                                                 {ZPOS, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)},
+                                                                 {ZNEG, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)}
+                                                               },
+     },
+
+    {SNOW, std::unordered_map<Direction, glm::vec2, EnumHash> {   {XPOS, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
+                                                                 {XNEG, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
+                                                                 {YPOS, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
+                                                                 {YNEG, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
+                                                                 {ZPOS, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
+                                                                 {ZNEG, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)}
+                                                               },
+     },
+
+     {DEBUG, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)},
+                                                                 {XNEG, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)},
+                                                                 {YPOS, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)},
+                                                                 {YNEG, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)},
+                                                                 {ZPOS, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)},
+                                                                 {ZNEG, glm::vec2(15.f BLK_UVX , 14.f BLK_UVY)}
+                                                               }
+     }
+};
+
+
 // One Chunk is a 16 x 256 x 16 section of the world,
 // containing all the Minecraft blocks in that area.
 // We divide the world into Chunks in order to make
