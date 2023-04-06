@@ -63,15 +63,16 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
 
                                 //pos vecs for this block - last elem 0.0f because it adds to vert
                                 glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
-                                // shubh: this is rough. Just for testing.
-                                glm::vec4 uvs[4] = {{0,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,1,0,0}};
+                                auto currBlockUVs = BlockFaceUVs.at(currBlock);
+                                glm::vec2 currBlockUV = currBlockUVs.at(f.dir);
+                                glm::vec2 delta_dist[4] = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
                                 int local_idx = 0;
                                 for(const VertexData &v: f.verts)
                                 {
                                     glm::vec4 vertPos = v.pos + blockPos;
                                     vboInter.push_back(vertPos);
                                     vboInter.push_back(vertCol);
-                                    vboInter.push_back(uvs[local_idx++]);
+                                    vboInter.push_back(glm::vec4{currBlockUV+delta_dist[local_idx++] , 0, 0});
                                     vboInter.push_back(glm::vec4(f.dirVec,0.f));
                                 }
                                 idx.push_back(0 + idxCount);
@@ -122,15 +123,17 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
 
                             //pos vecs for this block - last elem 0.0f because it adds to vert
                             glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
-                            // shubh: this is rough. Just for testing.
-                            glm::vec4 uvs[4] = {{0,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,1,0,0}};
+                            auto currBlockUVs = BlockFaceUVs.at(currBlock);
+                            glm::vec2 currBlockUV = currBlockUVs.at(f.dir);
+//                            glm::vec2 delta_dist[4] = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
+                            glm::vec2 delta_dist[4] = {{0,1/16.f}, {0,0}, {1/16.f,0},{1/16.f,1/16.f}};
                             int local_idx = 0;
                             for(const VertexData &v: f.verts)
                             {
                                 glm::vec4 vertPos = v.pos + blockPos;
                                 vboInter.push_back(vertPos);
                                 vboInter.push_back(vertCol);
-                                vboInter.push_back(uvs[local_idx++]);
+                                vboInter.push_back(glm::vec4{currBlockUV+delta_dist[local_idx++] , 0, 0});
                                 vboInter.push_back(glm::vec4(f.dirVec,0.f));
                             }
                             idx.push_back(0 + idxCount);
