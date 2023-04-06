@@ -11,6 +11,7 @@
 // can compute what color to apply to its pixel based on things like vertex
 // position, light position, and vertex color.
 
+uniform sampler2D u_Texture;
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
 
 // These are the interpolated values out of the rasterizer, so you can't know
@@ -72,8 +73,10 @@ float fbm(vec3 p) {
 void main()
 {
     // Material base color (before shading)
-        vec4 diffuseColor = fs_Col;
-        diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
+//        vec4 diffuseColor = fs_Col;
+//        diffuseColor = diffuseColor * (0.5 * fbm(fs_Pos.xyz) + 0.5);
+
+        vec4 diffuseColor = texture(u_Texture, fs_UV.xy);
 
         // Calculate the diffuse term for Lambert shading
         float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));

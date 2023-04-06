@@ -46,6 +46,8 @@ void MyGL::initializeGL()
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Set the color with which the screen is filled at the start of each render call.
     glClearColor(0.37f, 0.74f, 1.0f, 1);
 
@@ -135,6 +137,7 @@ void MyGL::sendPlayerDataToGUI() const {
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
     m_texture.bind(0);
+    m_progLambert.setTime(m_time++);
 
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
