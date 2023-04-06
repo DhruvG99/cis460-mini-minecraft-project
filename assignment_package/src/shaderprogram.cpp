@@ -64,6 +64,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
+    attrUV  = context->glGetAttribLocation(prog, "vs_UV");
     if(attrCol == -1) attrCol = context->glGetAttribLocation(prog, "vs_ColInstanced");
     attrPosOffset = context->glGetAttribLocation(prog, "vs_OffsetInstanced");
 
@@ -144,7 +145,7 @@ void ShaderProgram::draw(Drawable &d, int textureSlot)
 
     if(unifSampler2D != -1)
     {
-        context->glUniform1i(unifSampler2D, /*GL_TEXTURE*/textureSlot);
+        context->glUniform1i(unifSampler2D, textureSlot);
     }
 
     if(d.elemCount() < 0) {
@@ -170,6 +171,11 @@ void ShaderProgram::draw(Drawable &d, int textureSlot)
         context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 0, NULL);
     }
 
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 4, GL_FLOAT, false, 0, NULL);
+    }
+
     if (attrCol != -1 && d.bindCol()) {
         context->glEnableVertexAttribArray(attrCol);
         context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 0, NULL);
@@ -183,6 +189,7 @@ void ShaderProgram::draw(Drawable &d, int textureSlot)
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
 
     context->printGLErrorLog();
 }
@@ -204,17 +211,22 @@ void ShaderProgram::drawInter(Drawable &d)
         if(attrPos != -1)
         {
             context->glEnableVertexAttribArray(attrPos);
-            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)0);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 4*sizeof(glm::vec4), (void*)0);
         }
         if(attrCol != -1)
         {
             context->glEnableVertexAttribArray(attrCol);
-            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 4*sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+        }
+        if(attrUV != -1)
+        {
+            context->glEnableVertexAttribArray(attrUV);
+            context->glVertexAttribPointer(attrUV, 4, GL_FLOAT, false, 4*sizeof(glm::vec4), (void*)(2*sizeof(glm::vec4)));
         }
         if(attrNor != -1)
         {
             context->glEnableVertexAttribArray(attrNor);
-            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3*sizeof(glm::vec4), (void*)(2*sizeof(glm::vec4)));
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 4*sizeof(glm::vec4), (void*)(3*sizeof(glm::vec4)));
         }
     }
 
@@ -226,6 +238,7 @@ void ShaderProgram::drawInter(Drawable &d)
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
 
     context->printGLErrorLog();
 }
@@ -262,6 +275,12 @@ void ShaderProgram::drawInstanced(InstancedDrawable &d)
     if (attrCol != -1 && d.bindCol()) {
         context->glEnableVertexAttribArray(attrCol);
         context->glVertexAttribPointer(attrCol, 3, GL_FLOAT, false, 0, NULL);
+        context->glVertexAttribDivisor(attrCol, 1);
+    }
+
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 3, GL_FLOAT, false, 0, NULL);
         context->glVertexAttribDivisor(attrCol, 1);
     }
 

@@ -68,8 +68,9 @@ void MyGL::initializeGL()
     m_progFlatCrosshair.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
 
     // Load the texture image
-    char* texturePath = ":/textures/minecraft_normals_all.png";
+    char* texturePath = ":/textures/minecraft_textures_all.png";
     m_texture.create(texturePath);
+    m_texture.load(0);
 
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
@@ -133,6 +134,8 @@ void MyGL::sendPlayerDataToGUI() const {
 // MyGL's constructor links update() to a timer that fires 60 times per second,
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
+    m_texture.bind(0);
+
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

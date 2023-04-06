@@ -87,6 +87,70 @@ void createCubeVertexPositions(glm::vec4 (&cub_vert_pos)[CUB_VERT_COUNT])
     cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 }
 
+void createCubeUV(glm::vec4 (&cub_vert_pos)[CUB_VERT_COUNT])
+{
+    int idx = 0;
+    //Front face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+
+    //Right face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
+    //Left face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+
+    //Back face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+
+    //Top face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 1.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+
+    //Bottom face
+    //UR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 1.0f, 1.0f);
+    //LR
+    cub_vert_pos[idx++] = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+    //LL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    //UL
+    cub_vert_pos[idx++] = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+}
+
 
 void createCubeVertexNormals(glm::vec4 (&cub_vert_nor)[CUB_VERT_COUNT])
 {
@@ -135,9 +199,11 @@ void Cube::createVBOdata()
     GLuint sph_idx[CUB_IDX_COUNT];
     glm::vec4 sph_vert_pos[CUB_VERT_COUNT];
     glm::vec4 sph_vert_nor[CUB_VERT_COUNT];
+    glm::vec4 sph_vert_uv[CUB_VERT_COUNT];
 
     createCubeVertexPositions(sph_vert_pos);
     createCubeVertexNormals(sph_vert_nor);
+    createCubeUV(sph_vert_uv);
     createCubeIndices(sph_idx);
 
     m_count = CUB_IDX_COUNT;
@@ -160,6 +226,10 @@ void Cube::createVBOdata()
     generateNor();
     mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufNor);
     mp_context->glBufferData(GL_ARRAY_BUFFER, CUB_VERT_COUNT * sizeof(glm::vec4), sph_vert_nor, GL_STATIC_DRAW);
+
+    generateUV();
+    mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufUV);
+    mp_context->glBufferData(GL_ARRAY_BUFFER, CUB_VERT_COUNT * sizeof(glm::vec4), sph_vert_uv, GL_STATIC_DRAW);
 
 }
 
