@@ -145,12 +145,26 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
 //TODO: m2: draw chunk border
 void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram)
 {
+    // rendering all the opaque cubes
     for(int x = minX; x < maxX; x += 16) {
         for(int z = minZ; z < maxZ; z += 16) {
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
             if(chunk!=nullptr)
             {
-                chunk->createChunkVBOdata(x, z);
+                chunk->createChunkVBOdata(x, z, false);
+                chunk->createVBOdata();
+                shaderProgram->drawInter(*chunk);
+            }
+        }
+    }
+
+    // rendering all the transparent cubes
+    for(int x = minX; x < maxX; x += 16) {
+        for(int z = minZ; z < maxZ; z += 16) {
+            const uPtr<Chunk> &chunk = getChunkAt(x, z);
+            if(chunk!=nullptr)
+            {
+                chunk->createChunkVBOdata(x, z, true);
                 chunk->createVBOdata();
                 shaderProgram->drawInter(*chunk);
             }

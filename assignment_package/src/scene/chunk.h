@@ -116,7 +116,7 @@ private:
 public:
     Chunk(OpenGLContext*);
     ~Chunk();
-    void createChunkVBOdata(int, int);
+    void createChunkVBOdata(int, int, bool getTransparent=false);
     void createVBOdata() override;
     //drawMode is triangles by default
 

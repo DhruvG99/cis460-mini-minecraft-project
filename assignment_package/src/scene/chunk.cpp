@@ -14,7 +14,7 @@ Chunk::~Chunk()
 }
 
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
-void Chunk::createChunkVBOdata(int xChunk, int zChunk)
+void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
 {
     idxCount = 0;
     idx.clear();
@@ -26,7 +26,66 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk)
             for(int k = 0; k < 16; ++k) {
                 BlockType currBlock = this->getBlockAt(i, j, k);
                 //if not empty, paint faces (while checking for empty neighbors)
-                if(currBlock != EMPTY)
+                if(getTransparent){
+                    if(currBlock == WATER){
+                        for(const BlockFace &f: adjacentFaces)
+                        {
+                            BlockType adjBlock = EMPTY;
+                            glm::vec3 testBorder = glm::vec3(i,j,k) + f.dirVec;
+                            /*
+                             * testing if the face is on a bordering chunk
+                             * and then assigning to adjacent block
+                            */
+                            if(testBorder.x >=16.f || testBorder.y >=256.f || testBorder.z >=16.f ||
+                                    testBorder.x < 0.0f || testBorder.y < 0.0f || testBorder.z < 0.f)
+                            {
+                                Chunk* adjChunk = this->m_neighbors[f.dir];
+                                //if a neighbo(u)ring chunk exists
+                                if(adjChunk != nullptr) {
+                                    //https://stackoverflow.com/questions/7594508/modulo-operator-with-negative-values
+                                    int dx = (16 + i + (int)f.dirVec.x) % 16;
+                                    int dy = (256 + j + (int)f.dirVec.y) % 256;
+                                    int dz = (16 + k + (int)f.dirVec.z) % 16;
+                                    adjBlock = adjChunk->getBlockAt(dx,dy,dz);
+                                }
+                            }
+                            //face is in the same chunk
+                            else
+                                adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
+
+
+                            //possibly check if the adjBlock is water? (transparency)
+                            if(adjBlock==EMPTY)
+                            {
+                                glm::vec4 vertCol = colorFromBlock.at(DEBUG);
+                                if(colorFromBlock.count(currBlock) != 0)
+                                    vertCol = colorFromBlock.at(currBlock);
+
+                                //pos vecs for this block - last elem 0.0f because it adds to vert
+                                glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
+                                // shubh: this is rough. Just for testing.
+                                glm::vec4 uvs[4] = {{0,0,0,0}, {1,0,0,0}, {1,1,0,0}, {0,1,0,0}};
+                                int local_idx = 0;
+                                for(const VertexData &v: f.verts)
+                                {
+                                    glm::vec4 vertPos = v.pos + blockPos;
+                                    vboInter.push_back(vertPos);
+                                    vboInter.push_back(vertCol);
+                                    vboInter.push_back(uvs[local_idx++]);
+                                    vboInter.push_back(glm::vec4(f.dirVec,0.f));
+                                }
+                                idx.push_back(0 + idxCount);
+                                idx.push_back(1 + idxCount);
+                                idx.push_back(2 + idxCount);
+                                idx.push_back(0 + idxCount);
+                                idx.push_back(2 + idxCount);
+                                idx.push_back(3 + idxCount);
+                                idxCount += 4;
+                            }
+                        }
+                    }
+                }
+                else if(currBlock != EMPTY)
                 {
                     for(const BlockFace &f: adjacentFaces)
                     {
