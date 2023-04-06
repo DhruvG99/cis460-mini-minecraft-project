@@ -19,11 +19,13 @@ public:
     int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader
     int attrCol; // A handle for the "in" vec4 representing vertex color in the vertex shader
     int attrPosOffset; // A handle for a vec3 used only in the instanced rendering shader
+    int attrUV;
 
     int unifModel; // A handle for the "uniform" mat4 representing model matrix in the vertex shader
     int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
     int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
+    int unifSampler2D;
 
 public:
     ShaderProgram(OpenGLContext* context);
@@ -38,7 +40,7 @@ public:
     // Pass the given color to this shader on the GPU
     void setGeometryColor(glm::vec4 color);
     // Draw the given object to our screen using this ShaderProgram's shaders
-    void draw(Drawable &d);
+    void draw(Drawable &d, int textureSlot=0);
     // Draw the given object to our screen using interleaved VBO
     void drawInter(Drawable &d);
     // Draw the given object to our screen multiple times using instanced rendering

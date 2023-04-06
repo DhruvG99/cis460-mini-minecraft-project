@@ -8,8 +8,8 @@
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1),
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifSampler2D(-1),
       context(context)
 {}
 
@@ -71,6 +71,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
+    unifSampler2D = context->glGetUniformLocation(prog, "u_Texture");
 }
 
 void ShaderProgram::useMe()
@@ -137,9 +138,14 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
 }
 
 //This function, as its name implies, uses the passed in GL widget
-void ShaderProgram::draw(Drawable &d)
+void ShaderProgram::draw(Drawable &d, int textureSlot)
 {
     useMe();
+
+    if(unifSampler2D != -1)
+    {
+        context->glUniform1i(unifSampler2D, /*GL_TEXTURE*/textureSlot);
+    }
 
     if(d.elemCount() < 0) {
         throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
