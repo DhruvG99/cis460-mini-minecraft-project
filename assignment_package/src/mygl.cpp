@@ -11,7 +11,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       m_worldAxes(this),
       m_crosshair(this),
-      m_progLambert(this), m_progFlat(this), m_progFlatCrosshair(this), m_progInstanced(this),
+      m_progLambert(this), m_progFlat(this), m_progFlatCrosshair(this), m_progInstanced(this), m_texture(this),
       m_terrain(this), m_player(glm::vec3(52.f, 200.f, 42.f), m_terrain), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
@@ -66,6 +66,11 @@ void MyGL::initializeGL()
     m_progFlat.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
     m_progFlatCrosshair.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
+
+    // Load the texture image
+    char* texturePath = ":/textures/minecraft_normals_all.png";
+    m_texture.create(texturePath);
+
     // Set a color with which to draw geometry.
     // This will ultimately not be used when you change
     // your program to render Chunks with vertex colors
