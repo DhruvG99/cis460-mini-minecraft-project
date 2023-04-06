@@ -2,8 +2,8 @@
 #include <glm_includes.h>
 
 Drawable::Drawable(OpenGLContext* context)
-    : m_count(-1), m_bufIdx(), m_bufVBO(), m_bufPos(), m_bufNor(), m_bufCol(),
-      m_idxGenerated(false), m_vboGenerated(false), m_posGenerated(false), m_norGenerated(false), m_colGenerated(false),
+    : m_count(-1), m_bufIdx(), m_bufVBO(), m_bufPos(), m_bufNor(), m_bufCol(), m_bufUV(),
+      m_idxGenerated(false), m_vboGenerated(false), m_posGenerated(false), m_norGenerated(false), m_colGenerated(false), m_uvGenerated(false),
       mp_context(context)
 {}
 
@@ -73,6 +73,13 @@ void Drawable::generateCol()
     mp_context->glGenBuffers(1, &m_bufCol);
 }
 
+void Drawable::generateUV()
+{
+    m_uvGenerated = true;
+    // Create a VBO on our GPU and store its handle in bufCol
+    mp_context->glGenBuffers(1, &m_bufUV);
+}
+
 bool Drawable::bindIdx()
 {
     if(m_idxGenerated) {
@@ -112,6 +119,15 @@ bool Drawable::bindCol()
     }
     return m_colGenerated;
 }
+
+bool Drawable::bindUV()
+{
+    if(m_uvGenerated){
+        mp_context->glBindBuffer(GL_ARRAY_BUFFER, m_bufUV);
+    }
+    return m_uvGenerated;
+}
+
 
 InstancedDrawable::InstancedDrawable(OpenGLContext *context)
     : Drawable(context), m_numInstances(0), m_bufPosOffset(-1), m_offsetGenerated(false)
