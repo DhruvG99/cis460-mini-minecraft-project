@@ -22,7 +22,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
     idx.clear();
     vboInter.clear();
 
-    float flow_offset = fmod(time * 0.001, 3/16.f);
+    float flow_offset = fmod(time * 0.001, 2/16.f);
 
     //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
