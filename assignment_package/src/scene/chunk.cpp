@@ -86,7 +86,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                         }
                     }
                 }
-                else if(currBlock != EMPTY)
+                else if(currBlock != EMPTY) // all opaque blocks
                 {
                     for(const BlockFace &f: adjacentFaces)
                     {
@@ -126,7 +126,14 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                             auto currBlockUVs = BlockFaceUVs.at(currBlock);
                             glm::vec2 currBlockUV = currBlockUVs.at(f.dir);
 //                            glm::vec2 delta_dist[4] = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
-                            glm::vec2 delta_dist[4] = {{0,1/16.f}, {0,0}, {1/16.f,0},{1/16.f,1/16.f}};
+                            std::vector<glm::vec2> delta_dist;
+                            if(f.dir==ZNEG || f.dir == ZPOS){
+                                delta_dist = {{0,1/16.f}, {0,0}, {1/16.f,0}, {1/16.f,1/16.f}};
+                            }
+                            else{
+                                delta_dist = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
+                            }
+
                             int local_idx = 0;
                             for(const VertexData &v: f.verts)
                             {
