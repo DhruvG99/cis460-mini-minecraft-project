@@ -20,7 +20,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG
+    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG, LAVA
 };
 
 // The six cardinal directions in 3D space
@@ -178,7 +178,7 @@ private:
 public:
     Chunk(OpenGLContext*);
     ~Chunk();
-    void createChunkVBOdata(int, int, bool getTransparent=false);
+    void createChunkVBOdata(int, int, int time, bool getTransparent=false);
     void createVBOdata() override;
     //drawMode is triangles by default
 

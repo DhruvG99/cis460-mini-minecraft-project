@@ -170,7 +170,8 @@ void MyGL::renderTerrain() {
     int currX = static_cast<int>(glm::floor(currPos.x / 16.f));
     int currZ = static_cast<int>(glm::floor(currPos.z / 16.f));
     //for 3 by 3 chunks around player
-    m_terrain.draw(16*currX-32, 16*currX+32, 16*currZ-32, 16*currZ+32, &m_progLambert);
+
+    m_terrain.draw(16*currX-32, 16*currX+32, 16*currZ-32, 16*currZ+32, &m_progLambert, m_time);
 }
 
 void MyGL::keyPressEvent(QKeyEvent *e) {

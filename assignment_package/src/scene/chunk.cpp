@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include <iostream>
 
+
 Chunk::Chunk(OpenGLContext* context) :
     Drawable(context), m_blocks(),
     m_neighbors{{XPOS, nullptr},{XNEG, nullptr}, {ZPOS, nullptr}, {ZNEG, nullptr}}
@@ -13,12 +14,15 @@ Chunk::~Chunk()
     this->destroyVBOdata();
 }
 
+
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
-void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
+void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTransparent)
 {
     idxCount = 0;
     idx.clear();
     vboInter.clear();
+
+    float flow_offset = fmod(time * 0.001, 3/16.f);
 
     //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
@@ -27,7 +31,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                 BlockType currBlock = this->getBlockAt(i, j, k);
                 //if not empty, paint faces (while checking for empty neighbors)
                 if(getTransparent){
-                    if(currBlock == WATER){
+                    if(currBlock == WATER){ // add ice here
                         for(const BlockFace &f: adjacentFaces)
                         {
                             BlockType adjBlock = EMPTY;
@@ -53,7 +57,6 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                             else
                                 adjBlock = this->getBlockAt(i+(int)f.dirVec.x, j+(int)f.dirVec.y, k+(int)f.dirVec.z);
 
-
                             //possibly check if the adjBlock is water? (transparency)
                             if(adjBlock==EMPTY)
                             {
@@ -65,14 +68,20 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                                 glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
                                 auto currBlockUVs = BlockFaceUVs.at(currBlock);
                                 glm::vec2 currBlockUV = currBlockUVs.at(f.dir);
-                                glm::vec2 delta_dist[4] = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
+                                std::vector<glm::vec2> delta_dist;
+                                if(f.dir==ZNEG || f.dir == ZPOS){
+                                    delta_dist = {{0,1/16.f}, {0,0}, {1/16.f,0}, {1/16.f,1/16.f}};
+                                }
+                                else{
+                                    delta_dist = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
+                                }
                                 int local_idx = 0;
                                 for(const VertexData &v: f.verts)
                                 {
                                     glm::vec4 vertPos = v.pos + blockPos;
                                     vboInter.push_back(vertPos);
                                     vboInter.push_back(vertCol);
-                                    vboInter.push_back(glm::vec4{currBlockUV+delta_dist[local_idx++] , 0, 0});
+                                    vboInter.push_back(glm::vec4{currBlockUV + delta_dist[local_idx++] + glm::vec2(flow_offset, 0), 0, 0});
                                     vboInter.push_back(glm::vec4(f.dirVec,0.f));
                                 }
                                 idx.push_back(0 + idxCount);
@@ -86,7 +95,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                         }
                     }
                 }
-                else if(currBlock != EMPTY) // all opaque blocks
+                else if(currBlock != EMPTY && currBlock != WATER) // all opaque blocks
                 {
                     for(const BlockFace &f: adjacentFaces)
                     {
@@ -115,7 +124,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
 
 
                         //possibly check if the adjBlock is water? (transparency)
-                        if(adjBlock==EMPTY)
+                        if(adjBlock==EMPTY || adjBlock==WATER)
                         {
                             glm::vec4 vertCol = colorFromBlock.at(DEBUG);
                             if(colorFromBlock.count(currBlock) != 0)
@@ -125,7 +134,6 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, bool getTransparent)
                             glm::vec4 blockPos = glm::vec4(i+xChunk, j, k+zChunk, 0.0f);
                             auto currBlockUVs = BlockFaceUVs.at(currBlock);
                             glm::vec2 currBlockUV = currBlockUVs.at(f.dir);
-//                            glm::vec2 delta_dist[4] = {{0,0}, {1/16.f,0}, {1/16.f,1/16.f}, {0,1/16.f}};
                             std::vector<glm::vec2> delta_dist;
                             if(f.dir==ZNEG || f.dir == ZPOS){
                                 delta_dist = {{0,1/16.f}, {0,0}, {1/16.f,0}, {1/16.f,1/16.f}};
