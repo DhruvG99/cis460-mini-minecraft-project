@@ -79,7 +79,7 @@ void Player::processInputs(InputBundle &inputs) {
     }
 
     if(m_underLiquid){
-        if(inputs.spacePressed){
+        if(inputs.spacePressed && !m_flyMode){
             m_acceleration.y += 10/3.f * speedMod;
         }
     }
