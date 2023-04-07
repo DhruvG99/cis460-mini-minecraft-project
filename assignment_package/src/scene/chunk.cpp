@@ -22,16 +22,22 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
     idx.clear();
     vboInter.clear();
 
-    float flow_offset = fmod(time * 0.001, 2/16.f);
 
     //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 256; ++j) {
             for(int k = 0; k < 16; ++k) {
                 BlockType currBlock = this->getBlockAt(i, j, k);
+                float flow_offset;
+                if(currBlock == WATER || currBlock == LAVA){
+                    flow_offset = fmod(time * 0.001, 2/16.f);
+                }
+                else{
+                    flow_offset = 0;
+                }
                 //if not empty, paint faces (while checking for empty neighbors)
                 if(getTransparent){
-                    if(currBlock == WATER){ // add ice here
+                    if(currBlock == WATER || currBlock == ICE){
                         for(const BlockFace &f: adjacentFaces)
                         {
                             BlockType adjBlock = EMPTY;
@@ -148,7 +154,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
                                 glm::vec4 vertPos = v.pos + blockPos;
                                 vboInter.push_back(vertPos);
                                 vboInter.push_back(vertCol);
-                                vboInter.push_back(glm::vec4{currBlockUV+delta_dist[local_idx++] , 0, 0});
+                                vboInter.push_back(glm::vec4{currBlockUV + delta_dist[local_idx++] + glm::vec2(flow_offset, 0), 0, 0});
                                 vboInter.push_back(glm::vec4(f.dirVec,0.f));
                             }
                             idx.push_back(0 + idxCount);
