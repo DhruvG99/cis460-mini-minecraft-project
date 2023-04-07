@@ -9,7 +9,7 @@ private:
     glm::vec3 m_velocity, m_acceleration;
     Camera m_camera;
     const Terrain &mcr_terrain;
-    bool m_flyMode, m_isGrounded;
+    bool m_flyMode, m_isGrounded, m_underLiquid;
 
     void processInputs(InputBundle &inputs);
     void extracted(const Terrain &terrain, std::vector<glm::vec3> &vertexPos,

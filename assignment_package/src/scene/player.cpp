@@ -4,14 +4,14 @@
 #include <string.h>
 #include <vector>
 
-bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit);
+bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit, bool ignoreLiquid=true);
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *interfaceAxis);
 std::string getName(BlockType t);
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
       m_camera(pos + glm::vec3(0, 1.5f, 0)), mcr_terrain(terrain),
-      m_flyMode(true), m_isGrounded(false), mcr_camera(m_camera)
+      m_flyMode(true), m_isGrounded(false), m_underLiquid(false), mcr_camera(m_camera)
 {}
 
 Player::~Player()
@@ -33,7 +33,12 @@ void Player::processInputs(InputBundle &inputs) {
 
 
     if(m_flyMode == false && m_isGrounded == false){
-        m_acceleration = glm::vec3(0, -1.75*speedMod, 0); // apply gravity
+        if(m_underLiquid){
+            m_acceleration = glm::vec3(0, -1.16*speedMod, 0); // apply gravity
+        }
+        else{
+            m_acceleration = glm::vec3(0, -1.75*speedMod, 0); // apply gravity
+        }
     } else{
         m_acceleration = glm::vec3(0);
     }
@@ -65,10 +70,17 @@ void Player::processInputs(InputBundle &inputs) {
         }
     }
 
+
     if(m_isGrounded){
         m_acceleration.y = 0;
         if(inputs.spacePressed){ // can only jump on the ground
             m_acceleration.y += 20  * speedMod;
+        }
+    }
+
+    if(m_underLiquid){
+        if(inputs.spacePressed){
+            m_acceleration.y += 10/3.f * speedMod;
         }
     }
 
@@ -134,18 +146,32 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     m_acceleration[1] = abs(m_acceleration[1]) < 0.1 ? 0 : m_acceleration[1];
     m_acceleration[2] = abs(m_acceleration[2]) < 0.1 ? 0 : m_acceleration[2];
 
-    m_velocity += m_acceleration * dT;
+    float min_frame_rate = 15.f;
+    m_velocity += m_acceleration * std::min(dT, 1/min_frame_rate);
+    BlockType currType = terrain.getBlockAt(int(m_position.x), int(m_position.y), int(m_position.z));
+    if(currType == WATER || currType == LAVA){
+        m_velocity = 2/3.f * m_velocity;
+    }
     m_velocity[0] = abs(m_velocity[0]) < 0.1 ? 0 : m_velocity[0];
     m_velocity[1] = abs(m_velocity[1]) < 0.1 ? 0 : m_velocity[1];
     m_velocity[2] = abs(m_velocity[2]) < 0.1 ? 0 : m_velocity[2];
 
-    glm::vec3 pos_offset = m_velocity * dT;
+    glm::vec3 pos_offset = m_velocity * std::min(dT, 1/min_frame_rate);
+    std::cout << dT << std::endl;
 
     float out_dist = 1000.f; // init with large value
     glm::ivec3 out_blockHit;
     glm::vec3 subdirection;
     glm::vec3 posChange = glm::vec3(0.0f);
     glm::vec3 pos_origin = (glm::vec3(m_position.x-0.5, m_position.y, m_position.z-0.5));
+
+    // check if the player is under liquid or not
+    if(checkCollision(pos_origin, glm::vec3(0,100,0), 1, terrain, out_dist, out_blockHit, false)){
+        m_underLiquid = true;
+    }
+    else{
+        m_underLiquid = false;
+    }
 
     if(m_flyMode){
         posChange = pos_offset; // no collision in flight mode
@@ -173,13 +199,14 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
        }
     }
     moveAlongVector(posChange);
+//    std::cout << m_isGrounded << std::endl;
 //    std::cout << glm::to_string(glm::ivec3(glm::vec3(3.999,2,1))) << std::endl;
 //    bool collided = checkCollision(glm::vec3(32,129,31.99), glm::vec3(0,0,1.8), 2, terrain, out_dist, out_blockHit);
 //    std::cout << collided << "  "  << glm::to_string(out_blockHit) << "  "  << out_dist << std::endl;
 }
 
 
-bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit){
+bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit, bool ignoreLiquid){
     // Custom implementation ofgridMarch algorithm for individual axis. Runs faster and doesn't have bugs.
     glm::vec3 currCell = glm::floor(origin);
     float distanceMoved = (origin[axis] - currCell[axis]) * (-1 * glm::sign(rayDirection[axis]));
@@ -189,11 +216,22 @@ bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Te
         float tempDist = glm::min(0.9999f, maxDist-distanceMoved);
         float signedTempDist = tempDist * glm::sign(rayDirection[axis]);
         currCell[axis] += signedTempDist;
-        if(terrain.getBlockAt(currCell.x, currCell.y, currCell.z) != EMPTY) {
-            out_blockHit = currCell;
-            out_dist = glm::max(0.f,distanceMoved);
-            out_dist = distanceMoved;
-            return true;
+        BlockType currType = terrain.getBlockAt(currCell.x, currCell.y, currCell.z) ;
+        if(currType != EMPTY){
+            if(ignoreLiquid) {
+                if(currType != WATER && currType != LAVA){
+                    out_blockHit = currCell;
+                    out_dist = glm::max(0.f,distanceMoved);
+                    out_dist = distanceMoved;
+                    return true;
+                }
+            }
+            else{
+                out_blockHit = currCell;
+                out_dist = glm::max(0.f,distanceMoved);
+                out_dist = distanceMoved;
+                return true;
+            }
         }
         distanceMoved += tempDist;
     }
