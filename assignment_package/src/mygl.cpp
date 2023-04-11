@@ -109,7 +109,7 @@ void MyGL::resizeGL(int w, int h) {
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
 
-    m_progPostProcessCurrent.setDimensions(glm::ivec2(w * devicePixelRatio(), h*devicePixelRatio()));
+    m_progPostProcessCurrent.setDimensions(glm::ivec2(w * devicePixelRatio(), h*devicePixelRatio(   )));
     m_framebuffer.resize(w, h, 1);
     m_framebuffer.destroy();
     m_framebuffer.create();
@@ -156,10 +156,35 @@ void MyGL::paintGL() {
 
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setViewProjMatrix(m_player.mcr_camera.getViewProj());
-//    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setModelMatrix(glm::mat4());
 
+    int texture_slot = 1;
+
+   // Added
+   glm::vec3 playerPos = m_player.getPos();
+   auto currBtype = m_terrain.getBlockAt(playerPos.x, playerPos.y, playerPos.z);
+   if (currBtype == WATER || currBtype == LAVA) {
+       m_framebuffer.bindFrameBuffer();
+       glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+       m_framebuffer.bindToTextureSlot(texture_slot);
+    }
+
     renderTerrain();
+
+    // Added
+        if (currBtype == WATER || currBtype == LAVA) {
+            glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+            glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            m_framebuffer.bindToTextureSlot(texture_slot);
+
+            // if check on the draw post
+            m_progPostProcessCurrent.setBlckType(int(currBtype));
+            m_progPostProcessCurrent.drawPost(m_geomQuad, texture_slot);
+            m_progPostProcessCurrent.setTime(m_time);
+
+        }
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());

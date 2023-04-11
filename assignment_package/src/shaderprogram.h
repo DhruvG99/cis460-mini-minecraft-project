@@ -28,6 +28,7 @@ public:
     int unifSampler2D;
     int unifTime;
     int unifDimensions;
+    int unifBlckType;
 
 public:
     ShaderProgram(OpenGLContext* context);
@@ -49,12 +50,15 @@ public:
     // Draw the given object to our screen multiple times using instanced rendering
     void drawInstanced(InstancedDrawable &d);
     // Utility function used in create()
+    void drawPost(Drawable &d, int textureSlot);
+
     char* textFileRead(const char*);
     // Utility function that prints any shader compilation errors to the console
     void printShaderInfoLog(int shader);
     // Utility function that prints any shader linking errors to the console
     void printLinkInfoLog(int prog);
     void setDimensions(glm::ivec2);
+    void setBlckType(int);
 
     QString qTextFileRead(const char*);
 

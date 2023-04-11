@@ -9,8 +9,8 @@
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifSampler2D(-1), unifTime(-1),
-      unifDimensions(-1), context(context)
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifSampler2D(-1), unifTime(-1), unifDimensions(-1),
+    unifBlckType(-1), context(context)
 {}
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
@@ -75,6 +75,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifSampler2D = context->glGetUniformLocation(prog, "u_Texture");
     unifTime = context->glGetUniformLocation(prog, "u_Time");
     unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifBlckType = context->glGetUniformLocation(prog, "u_BlckType");
 
 }
 
@@ -99,6 +100,15 @@ void ShaderProgram::setDimensions(glm::ivec2 dims){
     if(unifDimensions != -1)
     {
         context->glUniform2i(unifDimensions, dims.x, dims.y);
+    }
+}
+
+void ShaderProgram::setBlckType(int blck_type){
+    useMe();
+
+    if(unifBlckType != -1)
+    {
+        context->glUniform1i(unifDimensions, blck_type);
     }
 }
 
@@ -158,6 +168,34 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
     {
         context->glUniform4fv(unifColor, 1, &color[0]);
     }
+}
+
+void ShaderProgram::drawPost(Drawable &d, int textureSlot) {
+    useMe();
+
+    if(d.elemCount() < 0) {
+        throw std::out_of_range("Attempting to draw a drawable with m_count of " + std::to_string(d.elemCount()) + "!");
+    }
+
+    // Set unifSampler2D to textureSlot
+    context->glUniform1i(unifSampler2D, textureSlot);
+
+    if (attrPos != -1 && d.bindPos()) {
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 0, NULL);
+    }
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, NULL);
+    }
+
+    d.bindIdx();
+    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+
+    context->printGLErrorLog();
 }
 
 //This function, as its name implies, uses the passed in GL widget
