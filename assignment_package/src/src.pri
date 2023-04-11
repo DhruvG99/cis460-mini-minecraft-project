@@ -2,10 +2,12 @@ INCLUDEPATH += $$PWD
 DEPENDPATH += $$PWD
 
 SOURCES += \
+    $$PWD/framebuffer.cpp \
     $$PWD/la.cpp \
     $$PWD/main.cpp \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
+    $$PWD/quad.cpp \
     $$PWD/scene/crosshair.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
@@ -22,9 +24,11 @@ SOURCES += \
     $$PWD/texture.cpp
 
 HEADERS += \
+    $$PWD/framebuffer.h \
     $$PWD/la.h \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
+    $$PWD/quad.h \
     $$PWD/scene/crosshair.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \

@@ -424,3 +424,7 @@ void Player::breakBlock(Terrain& terrain){
         terrain.setBlockAt(out_blockHit.x, out_blockHit.y, out_blockHit.z, BlockType::EMPTY);
     }
 }
+
+glm::vec3 Player::getPos() const{
+    return m_position;
+}

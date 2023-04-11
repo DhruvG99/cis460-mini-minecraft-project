@@ -20,7 +20,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG, LAVA, ICE
+    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG, LAVA, ICE, BEDROCK
 };
 
 // The six cardinal directions in 3D space
@@ -87,6 +87,7 @@ const static std::array<BlockFace, 6> adjacentFaces {
                                       VertexData(glm::vec4(0,1,0,1)))
 };
 
+// TODO: shubh: add ice color here
 //color map to easily retrieve colors of different blocks
 const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock = {
   {GRASS, glm::vec4(glm::vec3(95.f, 159.f, 53.f)/255.f, 1.0f)},
@@ -94,6 +95,8 @@ const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock =
   {STONE, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)},
   {WATER, glm::vec4(0.f, 0.f, 0.75f, 1.0f)},
   {SNOW, glm::vec4(1.0f)},
+  {LAVA, glm::vec4(1,0,0,1)},
+  {BEDROCK, glm::vec4(1,1,0,1)},
   {DEBUG, glm::vec4(1.f, 0.f, 1.f, 1.0f)}
 };
 

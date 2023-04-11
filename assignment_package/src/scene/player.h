@@ -52,6 +52,8 @@ public:
     void breakBlock(Terrain&);
     std::vector<glm::vec3> getPoints(glm::vec3 origin, glm::vec3 subdirection);
 
+    glm::vec3 getPos() const;
+
     // For sending the Player's data to the GUI
     // for display
     QString posAsQString() const;
