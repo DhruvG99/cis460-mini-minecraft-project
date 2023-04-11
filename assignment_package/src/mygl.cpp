@@ -162,7 +162,6 @@ void MyGL::paintGL() {
    // Added
    glm::vec3 playerPos = m_player.mcr_camera.mcr_position;
    auto currBtype = m_terrain.getBlockAt(playerPos.x, playerPos.y, playerPos.z);
-   std::cout << int(currBtype) << std::endl;
    if (currBtype == WATER || currBtype == LAVA) {
        m_framebuffer.bindFrameBuffer();
        glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());

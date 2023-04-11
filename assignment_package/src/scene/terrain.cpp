@@ -172,9 +172,16 @@ void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shader
     }
 }
 #endif
-
 vec2 random2(vec2 p ) {
     return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
+}
+
+vec3 random3(vec3 p ) {
+    float d1 = dot(p,vec3(127.1,311.7,234.0));
+    float d2 = dot(p,vec3(269.5,183.3, 122.4));
+    float d3 = dot(p,vec3(284.4,185.3, 199.3));
+    vec3 s = sin(vec3(d1, d2, d3))* 43758.5f;
+    return fract(s);
 }
 float surflet(vec2 P, vec2 gridPoint) {
     float distX = abs(P.x - gridPoint.x);
@@ -196,6 +203,34 @@ float PerlinNoise(vec2 uv) {
     return surflet(uv, uvXLYL) + surflet(uv, uvXHYL) + surflet(uv, uvXHYH) + surflet(uv, uvXLYH);
 }
 
+vec3 pow3d(vec3 t, float f) {
+    float t1 = pow(t.x, f);
+    float t2 = pow(t.y, f);
+    float t3 = pow(t.z, f);
+    return vec3(t1, t2, t3);
+}
+
+float surflet3D(vec3 P, vec3 gridPoint) {
+    vec3 t2 = abs(P-gridPoint) * 1.f;
+    vec3 t = vec3(1.f) - 6.f * pow3d(t2, 5.f) + 15.f * pow3d(t2, 4.f) - 10.f * pow3d(t2, 3.f);
+    vec3 gradient = random3(gridPoint)* 2.f - vec3(1.f);
+    vec3 diff = P - gridPoint;
+    float height = dot(diff, gradient);
+    return height * t.x * t.y * t.z;
+}
+
+float PerlinNoise3D(vec3 uvw) {
+    float surfletsum = 0.f;
+    for (int dx=0; dx <= 1 ; dx++) {
+        for(int dy=0; dy <= 1; dy++) {
+            for(int dz=0; dz <= 1; dz++) {
+                surfletsum += surflet3D(uvw, floor(uvw) + vec3(dx, dy, dz));
+            }
+        }
+    }
+    return surfletsum;
+}
+
 float worleyNoise(vec2 uv, float f) {
     uv *= f;
     vec2 uvint = floor(uv);
@@ -214,19 +249,20 @@ float worleyNoise(vec2 uv, float f) {
 }
 
 int obtainMountainHeight(int x, int z, double** height) {
-//    vec2 xz = vec2(x, z);
-//    float h = 0, amp = 0.5, freq=128.f;
-//    for(int i=0; i<4; i++) {
-//        float h1 = pow(PerlinNoise(xz/freq), 2.f);
-//        h1 = 1.f - abs(h1); //-> o to 1
-//        h += h1*amp;
-//        amp *= 0.5;
-//        freq *= 0.5;
-//    }
-//    float ret = glm::clamp(pow(h*128.f, 1.5f), 0.f, 128.f);
-//    return floor(ret);
-
     return glm::clamp((int) pow(abs(height[z][x]), 1.3f), 0, 128);
+}
+
+bool isGridEmpty(int x, int y, int z)
+{
+    vec3 xyz = vec3(x,y,z);
+    float freq = 20.f, sum=0.f;
+    for(int i=0; i<2; i++) {
+        float noise = PerlinNoise3D(xyz/freq);
+        sum+=noise;
+        freq /= 2.f;
+    }
+    float threshold = 0.f;
+    return (sum < threshold);
 }
 
 int genFractalMountainHeights(double **height, int levels, int size) {
@@ -287,6 +323,9 @@ void Terrain::CreateTestScene()
     int base_height = 128;
     int water_level = 148;
     int snow_level = 220;
+    int bed_level = 80;
+    int lava_level = 10;
+    int cave_opening_level = 155;
 
 
     int levels = 9;
@@ -298,37 +337,62 @@ void Terrain::CreateTestScene()
     // Create the basic terrain floor
     for(int x = xMin; x < xMax; ++x) {
         for(int z = zMin; z < zMax; ++z) {
+
+            // set cave systems
+            setBlockAt(x, bed_level, z, BEDROCK);
+            for(int y=bed_level+1; y<base_height; y++) {
+                // Perlin Caves
+                if (!isGridEmpty(x, y, z)) {
+                    setBlockAt(x, y, z, STONE);
+                } else if(y<bed_level+lava_level) {
+                    setBlockAt(x, y, z, LAVA);
+                }
+            }
+
+            // Procedural biome - interp the heights - with very low freq
+//            int y_m = obtainMountainHeight(x, z);
             int y_m = obtainMountainHeight(x, z, m_height);
-                        int y_g = obtainGrasslandHeight(x, z);
-                        float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
-                        t = glm::smoothstep(0.35f, 0.75f, t);
+            int y_g = obtainGrasslandHeight(x, z);
+            float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
+            t = glm::smoothstep(0.35f, 0.75f, t);
 
-                        int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
-                        for (int k = 0; k<=interp_h; k++) {
-                            if (t>0.5) {
-                                // Mountain biome
-                                if (k+base_height >= snow_level && k == interp_h) {
-                                    setBlockAt(x, k+base_height, z, SNOW);
-                                } else {
-                                    setBlockAt(x, k+base_height, z, STONE);
-                                }
-                            } else {
-                                // Grassland biome
-                                if (k == interp_h) {
-                                    setBlockAt(x, k+base_height, z, GRASS);
-                                }
-                                else {
-                                    setBlockAt(x, k+base_height, z, DIRT);
-                                }
-                            }
-                        }
+            int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
 
-                        if (interp_h + base_height < water_level) {
-                            // Water level
-                            for (int kw=interp_h+base_height; kw < water_level; kw++) {
-                                setBlockAt(x, kw, z, LAVA);
-                            }
-                        }
+            if (interp_h + base_height < water_level) {
+                // Water level
+                for (int kw=interp_h+base_height; kw < water_level; kw++) {
+                    setBlockAt(x, kw, z, WATER);
+                }
+            }
+
+            for (int k = 0; k<=interp_h; k++) {
+                if (t>0.5) {
+                    // Mountain biome
+                    if (k+base_height >= snow_level && k == interp_h) {
+                        setBlockAt(x, k+base_height, z, SNOW);
+                    }
+                    else {
+                        setBlockAt(x, k+base_height, z, STONE);
+                    }
+                } else {
+                    // Grassland biome
+                    if (isGridEmpty(x, k+base_height, z) && interp_h + base_height > water_level && interp_h + base_height < cave_opening_level) {
+                        continue;
+                    }
+                    if (k == interp_h) {
+                        setBlockAt(x, k+base_height, z, GRASS);
+                    }
+                    else {
+                        setBlockAt(x, k+base_height, z, DIRT);
+                    }
+                }
+            }
+//            // Terrain for basic testing
+//            setBlockAt(x, bed_level, z, BEDROCK);
+//            setBlockAt(x, bed_level+1, z, LAVA);
+//            setBlockAt(x, bed_level+2, z, LAVA);
+//            setBlockAt(x, bed_level+3, z, LAVA);
+//            setBlockAt(x, bed_level+4, z, LAVA);
         }
     }
 }
