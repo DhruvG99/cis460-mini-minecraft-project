@@ -72,6 +72,10 @@ void MyGL::initializeGL()
     m_progInstanced.create(":/glsl/instanced.vert.glsl", ":/glsl/lambert.frag.glsl");
     m_progFlatCrosshair.create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
 
+    m_geomQuad.createVBOdata();
+    m_progPostProcessCurrent.create(":/glsl/postproc.vert.glsl", ":/glsl/postproc.frag.glsl");
+    m_framebuffer.create();
+
     // Load the texture image
     char* texturePath = ":/textures/minecraft_textures_all.png";
     m_texture.create(texturePath);
@@ -104,6 +108,11 @@ void MyGL::resizeGL(int w, int h) {
 
     m_progLambert.setViewProjMatrix(viewproj);
     m_progFlat.setViewProjMatrix(viewproj);
+
+    m_progPostProcessCurrent.setDimensions(glm::ivec2(w * devicePixelRatio(), h*devicePixelRatio()));
+    m_framebuffer.resize(w, h, 1);
+    m_framebuffer.destroy();
+    m_framebuffer.create();
 
     printGLErrorLog();
 }
