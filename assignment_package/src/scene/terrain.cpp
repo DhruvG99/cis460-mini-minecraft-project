@@ -298,39 +298,37 @@ void Terrain::CreateTestScene()
     // Create the basic terrain floor
     for(int x = xMin; x < xMax; ++x) {
         for(int z = zMin; z < zMax; ++z) {
-            // Procedural biome - interp the heights - with very low freq
-//            int y_m = obtainMountainHeight(x, z);
             int y_m = obtainMountainHeight(x, z, m_height);
-            int y_g = obtainGrasslandHeight(x, z);
-            float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
-            t = glm::smoothstep(0.35f, 0.75f, t);
+                        int y_g = obtainGrasslandHeight(x, z);
+                        float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
+                        t = glm::smoothstep(0.35f, 0.75f, t);
 
-            int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
-            for (int k = 0; k<=interp_h; k++) {
-                if (t>0.5) {
-                    // Mountain biome
-                    if (k+base_height >= snow_level && k == interp_h) {
-                        setBlockAt(x, k+base_height, z, SNOW);
-                    } else {
-                        setBlockAt(x, k+base_height, z, STONE);
-                    }
-                } else {
-                    // Grassland biome
-                    if (k == interp_h) {
-                        setBlockAt(x, k+base_height, z, GRASS);
-                    }
-                    else {
-                        setBlockAt(x, k+base_height, z, DIRT);
-                    }
-                }
-            }
+                        int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
+                        for (int k = 0; k<=interp_h; k++) {
+                            if (t>0.5) {
+                                // Mountain biome
+                                if (k+base_height >= snow_level && k == interp_h) {
+                                    setBlockAt(x, k+base_height, z, SNOW);
+                                } else {
+                                    setBlockAt(x, k+base_height, z, STONE);
+                                }
+                            } else {
+                                // Grassland biome
+                                if (k == interp_h) {
+                                    setBlockAt(x, k+base_height, z, GRASS);
+                                }
+                                else {
+                                    setBlockAt(x, k+base_height, z, DIRT);
+                                }
+                            }
+                        }
 
-            if (interp_h + base_height < water_level) {
-                // Water level
-                for (int kw=interp_h+base_height; kw < water_level; kw++) {
-                    setBlockAt(x, kw, z, WATER);
-                }
-            }
+                        if (interp_h + base_height < water_level) {
+                            // Water level
+                            for (int kw=interp_h+base_height; kw < water_level; kw++) {
+                                setBlockAt(x, kw, z, LAVA);
+                            }
+                        }
         }
     }
 }

@@ -6,7 +6,7 @@
 
 bool checkCollision(glm::vec3 origin, glm::vec3 rayDirection, int axis, const Terrain &terrain, float &out_dist, glm::ivec3 &out_blockHit, bool ignoreLiquid=true);
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *interfaceAxis);
-std::string getName(BlockType t);
+//std::string getName(BlockType t);
 
 Player::Player(glm::vec3 pos, const Terrain &terrain)
     : Entity(pos), m_velocity(0,0,0), m_acceleration(0,0,0),
@@ -157,7 +157,7 @@ void Player::computePhysics(float dT, const Terrain &terrain) {
     m_velocity[2] = abs(m_velocity[2]) < 0.1 ? 0 : m_velocity[2];
 
     glm::vec3 pos_offset = m_velocity * std::min(dT, 1/min_frame_rate);
-    std::cout << dT << std::endl;
+//    std::cout << dT << std::endl;
 
     float out_dist = 1000.f; // init with large value
     glm::ivec3 out_blockHit;
@@ -319,22 +319,22 @@ QString Player::lookAsQString() const {
     return QString::fromStdString(str);
 }
 
-std::string getName(BlockType t) {
-    // function just used for debugging
-    std::string name = "unknown";
-    if (t == BlockType::EMPTY) {
-        name = "empty";
-    } else if (t == BlockType::GRASS) {
-        name = "grass";
-    } else if (t == BlockType::DIRT) {
-        name = "dirt";
-    } else if (t == BlockType::STONE) {
-        name = "stone";
-    } else if (t == BlockType::WATER) {
-        name = "water";
-    }
-    return name;
-}
+//std::string getName(BlockType t) {
+//    // function just used for debugging
+//    std::string name = "unknown";
+//    if (t == BlockType::EMPTY) {
+//        name = "empty";
+//    } else if (t == BlockType::GRASS) {
+//        name = "grass";
+//    } else if (t == BlockType::DIRT) {
+//        name = "dirt";
+//    } else if (t == BlockType::STONE) {
+//        name = "stone";
+//    } else if (t == BlockType::WATER) {
+//        name = "water";
+//    }
+//    return name;
+//}
 
 
 bool gridMarch(glm::vec3 rayOrigin, glm::vec3 rayDirection, const Terrain &terrain, float *out_dist, glm::ivec3 *out_blockHit, int *out_interfaceAxis) {

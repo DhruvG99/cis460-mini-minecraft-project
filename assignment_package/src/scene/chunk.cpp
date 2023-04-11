@@ -37,7 +37,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
                 }
                 //if not empty, paint faces (while checking for empty neighbors)
                 if(getTransparent){
-                    if(currBlock == WATER || currBlock == ICE){
+                    if(currBlock == WATER || currBlock == ICE || currBlock == LAVA){
                         for(const BlockFace &f: adjacentFaces)
                         {
                             BlockType adjBlock = EMPTY;
@@ -101,7 +101,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
                         }
                     }
                 }
-                else if(currBlock != EMPTY && currBlock != WATER) // all opaque blocks
+                else if(currBlock != EMPTY && currBlock != WATER && currBlock != LAVA) // all opaque blocks
                 {
                     for(const BlockFace &f: adjacentFaces)
                     {
@@ -130,7 +130,7 @@ void Chunk::createChunkVBOdata(int xChunk, int zChunk, int time, bool getTranspa
 
 
                         //possibly check if the adjBlock is water? (transparency)
-                        if(adjBlock==EMPTY || adjBlock==WATER)
+                        if(adjBlock==EMPTY || adjBlock==WATER || adjBlock==LAVA)
                         {
                             glm::vec4 vertCol = colorFromBlock.at(DEBUG);
                             if(colorFromBlock.count(currBlock) != 0)

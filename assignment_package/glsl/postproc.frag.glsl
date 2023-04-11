@@ -6,7 +6,7 @@ uniform int u_BlckType;
 
 in vec2 fs_UV;
 
-out vec3 color;
+out vec4 color;
 
 uniform sampler2D u_Texture;
 
@@ -46,7 +46,7 @@ void main()
     // TODO Homework 5
     float perlinNoise = PerlinNoise(vec2(12.f * fs_UV.x + cos(u_Time * 0.2f), 10.f * fs_UV.y - sin(u_Time * 0.5f)));
     vec2 uv = perlinNoise/35.f + fs_UV;
-    color = texture(u_Texture, uv).rgb;
+    vec3 col = texture(u_Texture, uv).rgb;
     vec3 tinge =  vec3(0.2f);
     if (u_BlckType == 4) {
         tinge.b += 0.6f;
@@ -55,5 +55,5 @@ void main()
     } else {
         tinge = vec3(1.0f);
     }
-    color = normalize(color + tinge);
+    color = vec4(normalize(col + tinge),1);
 }

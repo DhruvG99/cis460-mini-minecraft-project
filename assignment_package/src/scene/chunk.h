@@ -20,7 +20,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG, LAVA, ICE, BEDROCK
+    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, BEDROCK, LAVA, DEBUG, ICE
 };
 
 // The six cardinal directions in 3D space
@@ -95,8 +95,8 @@ const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock =
   {STONE, glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)},
   {WATER, glm::vec4(0.f, 0.f, 0.75f, 1.0f)},
   {SNOW, glm::vec4(1.0f)},
-  {LAVA, glm::vec4(1,0,0,1)},
-  {BEDROCK, glm::vec4(1,1,0,1)},
+  {LAVA, glm::vec4(1.f, 0.f,0.f,1.f)},
+  {BEDROCK, glm::vec4(.8f,.8f,.8f,1.f)},
   {DEBUG, glm::vec4(1.f, 0.f, 1.f, 1.0f)}
 };
 
@@ -137,6 +137,24 @@ const static std::unordered_map<BlockType, std::unordered_map<Direction, glm::ve
                                                                  {ZNEG, glm::vec2(13.f BLK_UVX , 3.f BLK_UVY)}
                                                                },
      },
+
+    {LAVA, std::unordered_map<Direction, glm::vec2, EnumHash> { {XPOS, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)},
+                                                                {XNEG, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)},
+                                                                {YPOS, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)},
+                                                                {YNEG, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)},
+                                                                {ZPOS, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)},
+                                                                {ZNEG, glm::vec2(13.f BLK_UVX , 1.f BLK_UVY)}
+                                                              },
+    },
+
+    {BEDROCK, std::unordered_map<Direction, glm::vec2, EnumHash> {{XPOS, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)},
+                                                                  {XNEG, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)},
+                                                                  {YPOS, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)},
+                                                                  {YNEG, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)},
+                                                                  {ZPOS, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)},
+                                                                  {ZNEG, glm::vec2(1.f BLK_UVX , 14.f BLK_UVY)}
+                                                                },
+    },
 
     {SNOW, std::unordered_map<Direction, glm::vec2, EnumHash> {   {XPOS, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},
                                                                  {XNEG, glm::vec2(3.f BLK_UVX , 11.f BLK_UVY)},

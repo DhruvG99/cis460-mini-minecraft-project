@@ -12,7 +12,7 @@ MyGL::MyGL(QWidget *parent)
       m_worldAxes(this),
       m_crosshair(this),
       m_progLambert(this), m_progFlat(this), m_progFlatCrosshair(this), m_progInstanced(this), m_texture(this),
-      m_time(0), m_terrain(this), m_player(glm::vec3(52.f, 200.f, 42.f), m_terrain),
+      m_time(0), m_terrain(this), m_player(glm::vec3(52.f, 150.f, 42.f), m_terrain),
       m_framebuffer(this, width(), height(), devicePixelRatio()),
       m_progPostProcessCurrent(this),
       m_geomQuad(this), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
@@ -148,7 +148,6 @@ void MyGL::sendPlayerDataToGUI() const {
 // MyGL's constructor links update() to a timer that fires 60 times per second,
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL() {
-    m_texture.bind(0);
     m_progLambert.setTime(m_time++);
 
     // Clear the screen so that we only see newly drawn images
@@ -161,8 +160,9 @@ void MyGL::paintGL() {
     int texture_slot = 1;
 
    // Added
-   glm::vec3 playerPos = m_player.getPos();
+   glm::vec3 playerPos = m_player.mcr_camera.mcr_position;
    auto currBtype = m_terrain.getBlockAt(playerPos.x, playerPos.y, playerPos.z);
+   std::cout << int(currBtype) << std::endl;
    if (currBtype == WATER || currBtype == LAVA) {
        m_framebuffer.bindFrameBuffer();
        glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
@@ -170,21 +170,21 @@ void MyGL::paintGL() {
        m_framebuffer.bindToTextureSlot(texture_slot);
     }
 
+    m_texture.bind(0);
     renderTerrain();
 
     // Added
-        if (currBtype == WATER || currBtype == LAVA) {
-            glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
-            glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            m_framebuffer.bindToTextureSlot(texture_slot);
+    if (currBtype == WATER || currBtype == LAVA) {
+        glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+        glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        m_framebuffer.bindToTextureSlot(texture_slot);
 
-            // if check on the draw post
-            m_progPostProcessCurrent.setBlckType(int(currBtype));
-            m_progPostProcessCurrent.drawPost(m_geomQuad, texture_slot);
-            m_progPostProcessCurrent.setTime(m_time);
-
-        }
+        // if check on the draw post
+        m_progPostProcessCurrent.setBlckType(int(currBtype));
+        m_progPostProcessCurrent.drawPost(m_geomQuad, texture_slot);
+        m_progPostProcessCurrent.setTime(m_time);
+    }
 
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
