@@ -17,16 +17,16 @@ Chunk::~Chunk()
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
 void Chunk::createChunkVBOdata(ChunkVBOData &c)
 {
-    m_idxCount = 0;
-    m_idxInter.clear();
-    m_vboInter.clear();
+    this->m_idxCount = 0;
+
+    this->m_idxInter.clear();
+    this->m_vboInter.clear();
 
     c.m_idxTrans.clear();
     c.m_vboTrans.clear();
     c.m_idxOpaque.clear();
     c.m_vboOpaque.clear();
 
-    //bools - vbo for chunk gen or not- > render
     for(int i = 0; i < 16; ++i) {
         for(int j = 0; j < 256; ++j) {
             for(int k = 0; k < 16; ++k) {

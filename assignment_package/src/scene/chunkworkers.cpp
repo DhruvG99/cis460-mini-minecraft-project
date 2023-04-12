@@ -3,16 +3,6 @@
 #include <iostream>
 using namespace glm;
 
-FBMWorker::FBMWorker(int x, int z, std::vector<Chunk*> chunksToFill,
-                     std::unordered_set<Chunk*>* chunksFilled, QMutex* fillLock)
-    : terrCoords(x,z),
-      m_chunksToFill(chunksToFill),
-      m_chunksFilled(chunksFilled),
-      m_chunksFillLock(fillLock)
-{
-
-}
-
 vec2 random2(vec2 p) {
     return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
 }
@@ -105,16 +95,29 @@ int obtainGrasslandHeight(int x, int z) {
     return floor(h1 * 22.f);
 }
 
+FBMWorker::FBMWorker(int x, int z, std::vector<Chunk*> chunksToFill,
+                     std::unordered_set<Chunk*>* chunksFilled, QMutex* fillLock)
+    : terrCoords(x,z),
+      m_chunksToFill(chunksToFill),
+      m_chunksFilled(chunksFilled),
+      m_chunksFillLock(fillLock)
+{
+
+}
+
 //iterate through all chunks that require BlockType Data for
 //this terrain zone (4by4 chunks): obtained from m_chunksToFill
 void FBMWorker::run()
 {
+    std::cout << "Chunks To fill: "<< m_chunksToFill.size() << std::endl;
     for(auto chunk: this->m_chunksToFill)
     {
+        m_chunksFillLock->lock();
+        m_chunksFilled->insert(chunk);
+        m_chunksFillLock->unlock();
+
         int xChunk = chunk->m_xChunk;
         int zChunk = chunk->m_zChunk;
-        int xMin = chunk->m_xChunk, xMax = chunk->m_xChunk+16;
-        int zMin = chunk->m_zChunk, zMax = chunk->m_zChunk+16;
 
         int base_height = 128;
         int water_level = 148;
@@ -165,9 +168,6 @@ void FBMWorker::run()
                 }
             }
         }
-        m_chunksFillLock->lock();
-        m_chunksFilled->insert(chunk);
-        m_chunksFillLock->unlock();
     }
 
 }
@@ -182,7 +182,7 @@ VBOWorker::VBOWorker(Chunk* c, std::vector<ChunkVBOData>* dat, QMutex* datLock)
 
 void VBOWorker::run()
 {
-    ChunkVBOData cvbo(this->m_chunk);
+    ChunkVBOData cvbo(m_chunk);
     m_chunk->createChunkVBOdata(cvbo);
 
     m_chunkVBOsLock->lock();

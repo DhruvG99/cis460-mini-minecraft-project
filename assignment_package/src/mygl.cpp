@@ -145,8 +145,9 @@ void MyGL::paintGL() {
 //    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setModelMatrix(glm::mat4());
 
+    std::cout << "Sent draw signal" <<std::endl;
     renderTerrain();
-
+    std::cout << "Draw Completed" <<std::endl;
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());

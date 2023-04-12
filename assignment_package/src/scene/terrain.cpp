@@ -160,6 +160,8 @@ void Terrain::draw(int currX, int currZ, ShaderProgram *shaderProgram)
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
             if(chunk!=nullptr)
             {
+                std::cout << chunk->m_xChunk << ", " << chunk->m_zChunk
+                          << ": " << chunk->elemCount() <<std::endl;
                 shaderProgram->drawInter(*chunk);
             }
         }
@@ -227,6 +229,7 @@ void Terrain::loadInitialTerrain()
 {
     glm::ivec2 currZonePos(0,0);
     std::unordered_set<int64_t> currZoneArea = findTerrainZoneArea(currZonePos, TERRAIN_ZONE_RADIUS);
+    std::cout << "Zones: " << currZoneArea.size() << std::endl;
     for(auto id: currZoneArea) {
         spawnFBMWorker(id);
     }
@@ -271,7 +274,7 @@ void Terrain::tryExpansion(glm::vec3 prevPos, glm::vec3 currPos)
                 for(int x = coord.x; x < coord.x + 64; x+=16) {
                     for(int z = coord.y; z < coord.y + 64; z+=16) {
                         auto &chunk = getChunkAt(x,z);
-                        //this should assign VBOs
+                        //this should reallocate VBOs
                         spawnVBOWorker(chunk.get());
                     }
                 }
@@ -291,87 +294,23 @@ void Terrain::checkThreadResults()
     //After all FBM workers are done, we now create VBO data
     //for the newly instantiated chunks which have BlockType data
     //Adds to m_chunksThatHaveVBOData bts
+    std::cout << "Have Block: "<< m_chunksThatHaveBlockData.size() << std::endl;
     this->m_blockDataLock.lock();
-    for(auto chunk: m_chunksThatHaveBlockData)
+    for(auto chunk: m_chunksThatHaveBlockData) {
         spawnVBOWorker(chunk); //createChunkVBOdata called here
+    }
     m_chunksThatHaveBlockData.clear();
     this->m_blockDataLock.unlock();
 
+    //CVBODaTA IS EMPTYYYY
+    std::cout << "Have VBO: "<< m_chunksThatHaveVBOData.size() << std::endl;
+
     //Now, all chunks that have VBO data and can be sent to GPU
     this->m_vboDataLock.lock();
-    for(ChunkVBOData& cvbd: m_chunksThatHaveVBOData)
-        cvbd.m_chunk->createVBOdata();
+    for(ChunkVBOData& c: m_chunksThatHaveVBOData)
+    {
+        c.m_chunk->createVBOdata();
+    }
     m_chunksThatHaveVBOData.clear();
     this->m_vboDataLock.unlock();
 }
-
-#if 0
-void Terrain::CreateTestScene()
-{
-    int xMin = 0, xMax = 256;
-    int zMin = 0, zMax = 256;
-    // Create the Chunks that will
-    // store the blocks for our
-    // initial world space
-    for(int x = xMin; x < xMax; x += 16) {
-        for(int z = zMin; z < zMax; z += 16) {
-            instantiateChunkAt(x, z);
-        }
-    }
-    // Tell our existing terrain set that
-    // the "generated terrain zone" at (0,0)
-    // now exists.
-    //TODO: m2: CHANGE THIS
-    m_generatedTerrain.insert(toKey(0, 0));
-
-    int base_height = 128;
-    int water_level = 148;
-    int snow_level = 220;
-
-
-    int levels = 9;
-    int size = pow(2, (levels - 1));
-    double **m_height = new double*[size + 1];
-    genFractalMountainHeights(m_height, levels, size);
-
-
-    // Create the basic terrain floor
-    for(int x = xMin; x < xMax; ++x) {
-        for(int z = zMin; z < zMax; ++z) {
-            // Procedural biome - interp the heights - with very low freq
-//            int y_m = obtainMountainHeight(x, z);
-            int y_m = obtainMountainHeight(x, z, m_height);
-            int y_g = obtainGrasslandHeight(x, z);
-            float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
-            t = glm::smoothstep(0.35f, 0.75f, t);
-
-            int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
-            for (int k = 0; k<=interp_h; k++) {
-                if (t>0.5) {
-                    // Mountain biome
-                    if (k+base_height >= snow_level && k == interp_h) {
-                        setBlockAt(x, k+base_height, z, SNOW);
-                    } else {
-                        setBlockAt(x, k+base_height, z, STONE);
-                    }
-                } else {
-                    // Grassland biome
-                    if (k == interp_h) {
-                        setBlockAt(x, k+base_height, z, GRASS);
-                    }
-                    else {
-                        setBlockAt(x, k+base_height, z, DIRT);
-                    }
-                }
-            }
-
-            if (interp_h + base_height < water_level) {
-                // Water level
-                for (int kw=interp_h+base_height; kw < water_level; kw++) {
-                    setBlockAt(x, kw, z, WATER);
-                }
-            }
-        }
-    }
-}
-#endif

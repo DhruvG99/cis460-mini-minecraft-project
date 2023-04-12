@@ -126,7 +126,7 @@ public:
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
 
     int m_xChunk, m_zChunk;
-    int m_idxCount = 0;
+    int m_idxCount;
     std::vector<GLuint> m_idxInter;
     std::vector<glm::vec4> m_vboInter;
 };
