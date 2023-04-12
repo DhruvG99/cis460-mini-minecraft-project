@@ -61,6 +61,8 @@ public:
     // Calls Terrain::draw().
     void renderTerrain();
 
+    glm::vec3 m_prevPos;
+
 protected:
     // Automatically invoked when the user
     // presses a key on the keyboard

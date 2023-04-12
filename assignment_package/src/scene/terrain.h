@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include "shaderprogram.h"
 #include "cube.h"
-
+#include <QMutex>
 
 //using namespace std;
 
@@ -42,6 +42,11 @@ private:
     // surrounding the Player should be rendered, the Chunks
     // in the Terrain will never be deleted until the program is terminated.
     std::unordered_set<int64_t> m_generatedTerrain;
+
+    std::unordered_set<Chunk*> m_chunksThatHaveBlockData;
+    QMutex m_blockDataLock;
+    std::vector<ChunkVBOData> m_chunksThatHaveVBOData;
+    QMutex m_vboDataLock;
     //removed geoomCube
     OpenGLContext* mp_context;
 
@@ -74,7 +79,16 @@ public:
     // Draws every Chunk that falls within the bounding box
     // described by the min and max coords, using the provided
     // ShaderProgram
-    void draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram);
+    void draw(int x, int z, ShaderProgram *shaderProgram);
+
+    bool terrainZoneExists(int64_t id);
+    std::unordered_set<int64_t> findTerrainZoneArea(glm::ivec2, int radius);
+    void spawnVBOWorker(Chunk*);
+    void spawnFBMWorker(int64_t id);
+    void checkThreadResults();
+    void loadInitialTerrain();
+    void tryExpansion(glm::vec3 prevPos, glm::vec3 currPos);
+
 
     // Initializes the Chunks that store the 64 x 256 x 64 block scene you
     // see when the base code is run.

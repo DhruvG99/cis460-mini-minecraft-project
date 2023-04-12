@@ -17,7 +17,9 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, WATER, SNOW, DEBUG
+    EMPTY, GRASS, DIRT, STONE,
+    WATER, SNOW, LAVA,
+    DEBUG
 };
 
 // The six cardinal directions in 3D space
@@ -93,6 +95,9 @@ const static std::unordered_map<BlockType, glm::vec4, EnumHash> colorFromBlock =
   {SNOW, glm::vec4(1.0f)},
   {DEBUG, glm::vec4(1.f, 0.f, 1.f, 1.0f)}
 };
+
+struct ChunkVBOData;
+
 // One Chunk is a 16 x 256 x 16 section of the world,
 // containing all the Minecraft blocks in that area.
 // We divide the world into Chunks in order to make
@@ -109,19 +114,32 @@ private:
     // These allow us to properly determine
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
 
-    int idxCount = 0;
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> vboInter;
-
 public:
-    Chunk(OpenGLContext*);
+    Chunk(OpenGLContext*, int, int);
     ~Chunk();
-    void createChunkVBOdata(int, int);
+    void createChunkVBOdata(ChunkVBOData&);
     void createVBOdata() override;
     //drawMode is triangles by default
-
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z) const;
     BlockType getBlockAt(int x, int y, int z) const;
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
+
+    int m_xChunk, m_zChunk;
+    int m_idxCount = 0;
+    std::vector<GLuint> m_idxInter;
+    std::vector<glm::vec4> m_vboInter;
+};
+
+struct ChunkVBOData
+{
+    Chunk* m_chunk;
+    std::vector<glm::vec4> m_vboTrans, m_vboOpaque;
+    std::vector<GLuint> m_idxTrans, m_idxOpaque;
+
+    ChunkVBOData(Chunk* c)
+        : m_chunk(c),
+          m_vboTrans{}, m_vboOpaque{},
+          m_idxTrans{}, m_idxOpaque{}
+    {}
 };
