@@ -323,7 +323,7 @@ void Terrain::CreateTestScene()
     int base_height = 128;
     int water_level = 148;
     int snow_level = 220;
-    int bed_level = 80;
+    int bed_level = 100;
     int lava_level = 10;
     int cave_opening_level = 155;
 
