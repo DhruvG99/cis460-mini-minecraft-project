@@ -9,6 +9,8 @@ Modified player's collision detection so that WATER and LAVA blocks do not cause
 Added a new post-process pipeline that makes use of the framebuffer class to first render the 3D terrain scene to the buffer, then renders the frame buffer's texture to a screen-spanning quadrangle geometry with a new post-processing shader program to create an overlay effect.
 This post-processing shader modifies the output color to add a tinge based on current block that player is in (Red for LAVA and BLUE for WATER). Additionally, it adds a slight movement effect that simulates fluid-like environment when inside these blocks using time uniform variable.
 
+### Texturing and Texture Animation - Shubh Agarwal
+Created new VBOs to differentiate between transparent and opaque blocks. Modified the collision detection so that submergence in lava and water is possible. Added texture atlas to texture slot and also added a sampler to put textures to the blocks. Interpolated using time to animate water and lava. Modified player physics so that user can press <SPACE> to climb up inside liquid.   
 
 ## Milestone 1
 ---
