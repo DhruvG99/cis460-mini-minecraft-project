@@ -9,6 +9,13 @@ Modified player's collision detection so that WATER and LAVA blocks do not cause
 Added a new post-process pipeline that makes use of the framebuffer class to first render the 3D terrain scene to the buffer, then renders the frame buffer's texture to a screen-spanning quadrangle geometry with a new post-processing shader program to create an overlay effect.
 This post-processing shader modifies the output color to add a tinge based on current block that player is in (Red for LAVA and BLUE for WATER). Additionally, it adds a slight movement effect that simulates fluid-like environment when inside these blocks using time uniform variable.
 
+### Multithreaded Terrain Generation - Dhruv Gupta
+Created new classes (FBM and VBO workers) that are responsible for handling the block type generation and VBO data creation/GPU sharing independently. Along with the use of QMutex, this allows for multithreaded terrain generation.
+
+The new generation goes beyond chunks and works with terrains (4x4 chunks). All terrain zones within a certain radius are rendered, and as the player moves away, the VBO of chunks outside the render distance are deallocated while new chunks are created or their VBO data is reallocated (in case it had been previously rendered but since destroyed).
+
+The main challenge here has been to figure out how data must be shared across the various workers and their threads. It is convenient to do so using references to variables. Eg. the variables that store the chunks to be created/filled in Terrain are shared by reference to the workers and they can thus determine whether chunks need to be reallocated or created from scratch.
+
 ### Texturing and Texture Animation - Shubh Agarwal
 Created new VBOs to differentiate between transparent and opaque blocks. Modified the collision detection so that submergence in lava and water is possible. Added texture atlas to texture slot and also added a sampler to put textures to the blocks. Interpolated using time to animate water and lava. Modified player physics so that user can press <SPACE> to climb up inside liquid.   
 
