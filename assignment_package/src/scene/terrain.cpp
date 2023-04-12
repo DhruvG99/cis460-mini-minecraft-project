@@ -395,4 +395,9 @@ void Terrain::CreateTestScene()
 //            setBlockAt(x, bed_level+4, z, LAVA);
         }
     }
+
+    for (int i = 0; i <= size; i++) {
+        delete[] m_height[i];
+    }
+    delete[] m_height;
 }
