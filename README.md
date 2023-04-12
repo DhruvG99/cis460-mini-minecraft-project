@@ -10,7 +10,7 @@ Added a new post-process pipeline that makes use of the framebuffer class to fir
 This post-processing shader modifies the output color to add a tinge based on current block that player is in (Red for LAVA and BLUE for WATER). Additionally, it adds a slight movement effect that simulates fluid-like environment when inside these blocks using time uniform variable.
 
 ### Multithreaded Terrain Generation - Dhruv Gupta
-Created new classes (FBM and VBO workers) that are responsible for handling the block type generation and VBO data creation/GPU sharing independently. Along with the use of QMutex, this allows for multithreaded terrain generation.
+Created new classes (FBM and VBO workers) that are responsible for handling the block type generation and VBO data creation/GPU sharing independently. Along with the use of QMutex, this allows for multithreaded terrain generation. Created a new structure for the chunk's VBO data to use with workers. Made functionality to load the initial terrain and check every tick for whether new terrain zones need to be created/rendered. 
 
 The new generation goes beyond chunks and works with terrains (4x4 chunks). All terrain zones within a certain radius are rendered, and as the player moves away, the VBO of chunks outside the render distance are deallocated while new chunks are created or their VBO data is reallocated (in case it had been previously rendered but since destroyed).
 
