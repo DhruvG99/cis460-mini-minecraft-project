@@ -1,3 +1,15 @@
+## Milestone 2
+---
+
+### Procedural generation of caves using 3D noise - Swati Gupta
+Used 3D Perlin Noise to generate underground cave like structures below the base level of 128. Also set the threshold and config such that in the grassland biomes, these caves break out from the surface of the terrain and hence have openings that allow player to navigate into them easily. Added new block types: LAVA and BEDROCK
+
+Modified player's collision detection so that WATER and LAVA blocks do not cause the player to stop moving. Instead, the player moves at 2/3 its normal speed. Player can also swim upwards at a constant rate by holding Spacebar. 
+
+Added a new post-process pipeline that makes use of the framebuffer class to first render the 3D terrain scene to the buffer, then renders the frame buffer's texture to a screen-spanning quadrangle geometry with a new post-processing shader program to create an overlay effect.
+This post-processing shader modifies the output color to add a tinge based on current block that player is in (Red for LAVA and BLUE for WATER). Additionally, it adds a slight movement effect that simulates fluid-like environment when inside these blocks using time uniform variable.
+
+
 ## Milestone 1
 ---
 

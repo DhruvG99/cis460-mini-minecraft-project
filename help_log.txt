@@ -6,3 +6,6 @@ https://www.shadertoy.com/view/3lcGRX
 
 Mar 30, 2023: Fractal Noise examples and use cases
 https://github.com/dafarry/python-fractal-landscape  
+
+Apr 11, 2023: Perlin 3D Noise:
+https://en.wikipedia.org/wiki/Perlin_noise
