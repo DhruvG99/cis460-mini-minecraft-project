@@ -108,7 +108,7 @@ void ShaderProgram::setBlckType(int blck_type){
 
     if(unifBlckType != -1)
     {
-        context->glUniform1i(unifDimensions, blck_type);
+        context->glUniform1i(unifBlckType, blck_type);
     }
 }
 
