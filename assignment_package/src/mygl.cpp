@@ -81,9 +81,7 @@ void MyGL::initializeGL()
     m_player.rotateOnRightLocal(-60.f);
 
     m_terrain.loadInitialTerrain();
-    std::cout << "Done loading" << std::endl;
     m_terrain.checkThreadResults();
-    std::cout << "Done checking" << std::endl;
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -112,8 +110,9 @@ void MyGL::tick() {
     m_player.tick(dT, m_inputs);
 
     glm::vec3 currPosition = m_player.mcr_position;
-//    m_terrain.tryExpansion(this->m_prevPos, currPosition);
-//    m_terrain.checkThreadResults();
+
+    m_terrain.tryExpansion(this->m_prevPos, currPosition);
+    m_terrain.checkThreadResults();
 
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
@@ -145,9 +144,8 @@ void MyGL::paintGL() {
 //    m_progInstanced.setViewProjMatrix(m_player.mcr_camera.getViewProj());
     m_progLambert.setModelMatrix(glm::mat4());
 
-    std::cout << "Sent draw signal" <<std::endl;
     renderTerrain();
-    std::cout << "Draw Completed" <<std::endl;
+
     glDisable(GL_DEPTH_TEST);
     m_progFlat.setModelMatrix(glm::mat4());
     m_progFlat.setViewProjMatrix(m_player.mcr_camera.getViewProj());

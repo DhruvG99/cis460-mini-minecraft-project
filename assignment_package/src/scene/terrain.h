@@ -43,10 +43,12 @@ private:
     // in the Terrain will never be deleted until the program is terminated.
     std::unordered_set<int64_t> m_generatedTerrain;
 
+    //terrain area actually rendered
     std::unordered_set<Chunk*> m_chunksThatHaveBlockData;
     QMutex m_blockDataLock;
     std::vector<ChunkVBOData> m_chunksThatHaveVBOData;
     QMutex m_vboDataLock;
+
     //removed geoomCube
     OpenGLContext* mp_context;
 

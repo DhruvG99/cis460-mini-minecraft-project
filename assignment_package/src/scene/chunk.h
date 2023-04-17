@@ -127,6 +127,7 @@ public:
 
     int m_xChunk, m_zChunk;
     int m_idxCount;
+    int m_countTrans, m_countOpaque;
     std::vector<GLuint> m_idxInter;
     std::vector<glm::vec4> m_vboInter;
 };

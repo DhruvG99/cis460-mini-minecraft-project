@@ -17,6 +17,7 @@ Chunk::~Chunk()
 //Using x,z - the chunk coordinate - to transform all blocks appropriately
 void Chunk::createChunkVBOdata(ChunkVBOData &c)
 {
+
     this->m_idxCount = 0;
 
     this->m_idxInter.clear();
@@ -122,6 +123,8 @@ void Chunk::createChunkVBOdata(ChunkVBOData &c)
     m_idxInter.insert(m_idxInter.end(), c.m_idxTrans.begin(), c.m_idxTrans.end());
     m_vboInter.insert(m_vboInter.end(), c.m_vboOpaque.begin(), c.m_vboOpaque.end());
     m_vboInter.insert(m_vboInter.end(), c.m_vboTrans.begin(), c.m_vboTrans.end());
+    m_countTrans = c.m_idxTrans.size();
+    m_countOpaque = c.m_idxOpaque.size();
     this->m_count = m_idxInter.size();
 }
 

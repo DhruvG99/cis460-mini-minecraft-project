@@ -1,7 +1,10 @@
 #include "chunkworkers.h"
 #include "glm/gtc/random.hpp"
 #include <iostream>
+#include <QThreadPool>
+
 using namespace glm;
+
 
 vec2 random2(vec2 p) {
     return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
@@ -95,6 +98,7 @@ int obtainGrasslandHeight(int x, int z) {
     return floor(h1 * 22.f);
 }
 
+
 FBMWorker::FBMWorker(int x, int z, std::vector<Chunk*> chunksToFill,
                      std::unordered_set<Chunk*>* chunksFilled, QMutex* fillLock)
     : terrCoords(x,z),
@@ -109,12 +113,14 @@ FBMWorker::FBMWorker(int x, int z, std::vector<Chunk*> chunksToFill,
 //this terrain zone (4by4 chunks): obtained from m_chunksToFill
 void FBMWorker::run()
 {
-    std::cout << "Chunks To fill: "<< m_chunksToFill.size() << std::endl;
-    for(auto chunk: this->m_chunksToFill)
+
+    for(auto& chunk: this->m_chunksToFill)
     {
-        m_chunksFillLock->lock();
-        m_chunksFilled->insert(chunk);
-        m_chunksFillLock->unlock();
+        //filling shared resource after loop
+
+//        m_chunksFillLock->lock();
+//        m_chunksFilled->insert(chunk);
+//        m_chunksFillLock->unlock();
 
         int xChunk = chunk->m_xChunk;
         int zChunk = chunk->m_zChunk;
@@ -135,7 +141,7 @@ void FBMWorker::run()
             for(int z = 0; z < 16; ++z) {
                 // Procedural biome - interp the heights - with very low freq
     //            int y_m = obtainMountainHeight(x, z);
-                int y_m = obtainMountainHeight(x+xChunk, z+zChunk, m_height);
+                int y_m = obtainMountainHeight(abs(x+xChunk)%255, abs(z+zChunk)%255, m_height);
                 int y_g = obtainGrasslandHeight(x+xChunk, z+zChunk);
                 float t = worleyNoise(vec2(x+xChunk, z+zChunk)*0.005f, 1.f);
                 t = glm::smoothstep(0.35f, 0.75f, t);
@@ -170,6 +176,15 @@ void FBMWorker::run()
         }
     }
 
+    m_chunksFillLock->lock();
+    for(auto& chunk: m_chunksToFill)
+    {
+        m_chunksFilled->insert(chunk);
+    }
+    m_chunksFillLock->unlock();
+//    std::cout << "Chunks Filled So Far (" << QThread::currentThreadId() << "): "
+//              << m_chunksFilled->size() << std::endl;
+
 }
 
 VBOWorker::VBOWorker(Chunk* c, std::vector<ChunkVBOData>* dat, QMutex* datLock)
@@ -188,4 +203,5 @@ void VBOWorker::run()
     m_chunkVBOsLock->lock();
     m_chunkVBOsCompleted->push_back(cvbo);
     m_chunkVBOsLock->unlock();
+
 }
