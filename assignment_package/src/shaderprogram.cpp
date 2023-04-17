@@ -15,6 +15,7 @@ ShaderProgram::ShaderProgram(OpenGLContext *context)
 
 void ShaderProgram::create(const char *vertfile, const char *fragfile)
 {
+    context->printGLErrorLog();
     // Allocate space on our GPU for a vertex shader and a fragment shader and a shader program to manage the two
     vertShader = context->glCreateShader(GL_VERTEX_SHADER);
     fragShader = context->glCreateShader(GL_FRAGMENT_SHADER);
@@ -77,6 +78,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
     unifBlckType = context->glGetUniformLocation(prog, "u_BlckType");
 
+    context->printGLErrorLog();
 }
 
 void ShaderProgram::useMe()
