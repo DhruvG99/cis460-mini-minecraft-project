@@ -78,9 +78,7 @@ public:
     // given type.
     void setBlockAt(int x, int y, int z, BlockType t);
 
-    // Draws every Chunk that falls within the bounding box
-    // described by the min and max coords, using the provided
-    // ShaderProgram
+    // Draws every Chunk in a terrain zone radius around (x,z)
     void draw(int x, int z, ShaderProgram *shaderProgram);
 
     bool terrainZoneExists(int64_t id);
