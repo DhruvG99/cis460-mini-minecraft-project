@@ -7,7 +7,7 @@
 class Drawable
 {
 protected:
-    int m_count;     // The number of indices stored in bufIdx.
+//    int m_count;     // The number of indices stored in bufIdx.
     GLuint m_bufIdx; // A Vertex Buffer Object that we will use to store triangle indices (GLuints)
     GLuint m_bufVBO; //VBO to store collated data
     GLuint m_bufPos; // A Vertex Buffer Object that we will use to store mesh vertices (vec4s)
@@ -54,6 +54,7 @@ public:
     bool bindNor();
     bool bindCol();
     bool bindUV();
+    int m_count;
 };
 
 // A subclass of Drawable that enables the base code to render duplicates of

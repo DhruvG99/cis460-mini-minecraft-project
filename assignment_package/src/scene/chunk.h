@@ -175,6 +175,7 @@ const static std::unordered_map<BlockType, std::unordered_map<Direction, glm::ve
      }
 };
 
+struct ChunkVBOData;
 
 // One Chunk is a 16 x 256 x 16 section of the world,
 // containing all the Minecraft blocks in that area.
@@ -192,19 +193,33 @@ private:
     // These allow us to properly determine
     std::unordered_map<Direction, Chunk*, EnumHash> m_neighbors;
 
-    int idxCount = 0;
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> vboInter;
-
 public:
-    Chunk(OpenGLContext*);
+    Chunk(OpenGLContext*, int, int);
     ~Chunk();
-    void createChunkVBOdata(int, int, int time, bool getTransparent=false);
+    void createChunkVBOdata(ChunkVBOData&, int time);
     void createVBOdata() override;
     //drawMode is triangles by default
-
     BlockType getBlockAt(unsigned int x, unsigned int y, unsigned int z) const;
     BlockType getBlockAt(int x, int y, int z) const;
     void setBlockAt(unsigned int x, unsigned int y, unsigned int z, BlockType t);
     void linkNeighbor(uPtr<Chunk>& neighbor, Direction dir);
+
+    int m_xChunk, m_zChunk;
+    int m_idxCount;
+    int m_countTrans, m_countOpaque;
+    std::vector<GLuint> m_idxInter;
+    std::vector<glm::vec4> m_vboInter;
+};
+
+struct ChunkVBOData
+{
+    Chunk* m_chunk;
+    std::vector<glm::vec4> m_vboTrans, m_vboOpaque;
+    std::vector<GLuint> m_idxTrans, m_idxOpaque;
+
+    ChunkVBOData(Chunk* c)
+        : m_chunk(c),
+          m_vboTrans{}, m_vboOpaque{},
+          m_idxTrans{}, m_idxOpaque{}
+    {}
 };

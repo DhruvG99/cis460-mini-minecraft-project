@@ -80,6 +80,8 @@ void Drawable::generateUV()
     mp_context->glGenBuffers(1, &m_bufUV);
 }
 
+
+
 bool Drawable::bindIdx()
 {
     if(m_idxGenerated) {

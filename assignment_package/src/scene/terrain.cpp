@@ -1,13 +1,20 @@
 #include "terrain.h"
-#include "glm/gtc/random.hpp"
 #include <stdexcept>
 #include <iostream>
 #include <chrono>
+#include <QThreadPool>
+#include "chunkworkers.h"
+
+#define TERRAIN_ZONE_RADIUS 3
+
 using namespace std::chrono;
 using namespace glm;
 
 Terrain::Terrain(OpenGLContext *context)
-    : m_chunks(), m_generatedTerrain(), mp_context(context)
+    : m_chunks(), m_generatedTerrain(),
+      m_chunksThatHaveBlockData(), m_blockDataLock(),
+      m_chunksThatHaveVBOData(), m_vboDataLock(),
+      mp_context(context)
 {}
 
 Terrain::~Terrain()
@@ -118,7 +125,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 }
 
 Chunk* Terrain::instantiateChunkAt(int x, int z) {
-    uPtr<Chunk> chunk = mkU<Chunk>(this->mp_context);
+    uPtr<Chunk> chunk = mkU<Chunk>(this->mp_context, x, z);
     Chunk *cPtr = chunk.get();
     m_chunks[toKey(x, z)] = std::move(chunk);
     // Set the neighbor pointers of itself and its neighbors
@@ -141,263 +148,189 @@ Chunk* Terrain::instantiateChunkAt(int x, int z) {
     return cPtr;
 }
 
-#if 1
-//TODO: m2: draw chunk border
-void Terrain::draw(int minX, int maxX, int minZ, int maxZ, ShaderProgram *shaderProgram, int time)
+//TODO: m3: draw chunk border?
+void Terrain::draw(int currX, int currZ, ShaderProgram *shaderProgram)
 {
-    // rendering all the opaque cubes
-    for(int x = minX; x < maxX; x += 16) {
-        for(int z = minZ; z < maxZ; z += 16) {
+    //for all terrains being rendered
+    // so 3 terrains in each direction + self
+    // so 7*7 = 49 terrains
+    // 49*4*4 = 784 Chunks
+    // 784*16*16 = 200,704 blocks in entire render
+    int rad = TERRAIN_ZONE_RADIUS;
+    for(int x = currX - 64*rad; x < currX + 64*(rad+1); x += 16) {
+        for(int z = currZ - 64*rad; z < currZ + 64*(rad+1); z += 16) {
             const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            if(chunk!=nullptr)
-            {
-                chunk->createChunkVBOdata(x, z, time, false);
-                chunk->createVBOdata();
+            if(chunk!=nullptr) {
                 shaderProgram->drawInter(*chunk);
             }
-        }
-    }
 
-    // rendering all the transparent cubes
-    for(int x = minX; x < maxX; x += 16) {
-        for(int z = minZ; z < maxZ; z += 16) {
-            const uPtr<Chunk> &chunk = getChunkAt(x, z);
-            if(chunk!=nullptr)
-            {
-                chunk->createChunkVBOdata(x, z, time, true);
-                chunk->createVBOdata();
-                shaderProgram->drawInter(*chunk);
-            }
         }
     }
 }
-#endif
-vec2 random2(vec2 p ) {
-    return fract(sin(vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)))) * 43758.54f);
-}
 
-vec3 random3(vec3 p ) {
-    float d1 = dot(p,vec3(127.1,311.7,234.0));
-    float d2 = dot(p,vec3(269.5,183.3, 122.4));
-    float d3 = dot(p,vec3(284.4,185.3, 199.3));
-    vec3 s = sin(vec3(d1, d2, d3))* 43758.5f;
-    return fract(s);
-}
-float surflet(vec2 P, vec2 gridPoint) {
-    float distX = abs(P.x - gridPoint.x);
-    float distY = abs(P.y - gridPoint.y);
-    float tX = 1.0 - 6.0 * pow(distX, 5.0) + 15.0 * pow(distX, 4.0) - 10.0 * pow(distX, 3.0);
-    float tY = 1.0 - 6.0 * pow(distY, 5.0) + 15.0 * pow(distY, 4.0) - 10.0 * pow(distY, 3.0);
-
-    vec2 gradient = random2(gridPoint);
-    vec2 diff = P - gridPoint;
-    float height = dot(diff, gradient);
-    return height * tX * tY;
-}
-
-float PerlinNoise(vec2 uv) {
-    vec2 uvXLYL = floor(uv);
-    vec2 uvXHYL = uvXLYL + vec2(1,0);
-    vec2 uvXHYH = uvXLYL + vec2(1,1);
-    vec2 uvXLYH = uvXLYL + vec2(0,1);
-    return surflet(uv, uvXLYL) + surflet(uv, uvXHYL) + surflet(uv, uvXHYH) + surflet(uv, uvXLYH);
-}
-
-vec3 pow3d(vec3 t, float f) {
-    float t1 = pow(t.x, f);
-    float t2 = pow(t.y, f);
-    float t3 = pow(t.z, f);
-    return vec3(t1, t2, t3);
-}
-
-float surflet3D(vec3 P, vec3 gridPoint) {
-    vec3 t2 = abs(P-gridPoint) * 1.f;
-    vec3 t = vec3(1.f) - 6.f * pow3d(t2, 5.f) + 15.f * pow3d(t2, 4.f) - 10.f * pow3d(t2, 3.f);
-    vec3 gradient = random3(gridPoint)* 2.f - vec3(1.f);
-    vec3 diff = P - gridPoint;
-    float height = dot(diff, gradient);
-    return height * t.x * t.y * t.z;
-}
-
-float PerlinNoise3D(vec3 uvw) {
-    float surfletsum = 0.f;
-    for (int dx=0; dx <= 1 ; dx++) {
-        for(int dy=0; dy <= 1; dy++) {
-            for(int dz=0; dz <= 1; dz++) {
-                surfletsum += surflet3D(uvw, floor(uvw) + vec3(dx, dy, dz));
-            }
-        }
-    }
-    return surfletsum;
-}
-
-float worleyNoise(vec2 uv, float f) {
-    uv *= f;
-    vec2 uvint = floor(uv);
-    vec2 uvfract = fract(uv);
-    float minD = 1.f;
-    for(int y=-1; y<=1; y++){
-        for(int x = -1; x<=1; x++) {
-            vec2 neigh = vec2(float(x), float(y));
-            vec2 point = random2(uvint + neigh);
-            vec2 diff = neigh + point - uvfract;
-            float dist = length(diff);
-            minD = glm::min(minD, dist);
-        }
-    }
-    return minD;
-}
-
-int obtainMountainHeight(int x, int z, double** height) {
-    return glm::clamp((int) pow(abs(height[z][x]), 1.3f), 0, 128);
-}
-
-bool isGridEmpty(int x, int y, int z)
+bool Terrain::terrainZoneExists(int64_t id)
 {
-    vec3 xyz = vec3(x,y,z);
-    float freq = 20.f, sum=0.f;
-    for(int i=0; i<2; i++) {
-        float noise = PerlinNoise3D(xyz/freq);
-        sum+=noise;
-        freq /= 2.f;
-    }
-    float threshold = 0.f;
-    return (sum < threshold);
+    if(this->m_generatedTerrain.count(id)==0)
+        return false;
+    else
+        return true;
 }
 
-int genFractalMountainHeights(double **height, int levels, int size) {
-    // Fractal heights Gen
-    for (int i = 0; i < size + 1; ++i) {
-        height[i] = new double[size + 1];
-        for (int j = 0; j < size + 1; ++j) {
-            height[i][j] = 0.0;
-        }
-    }
-    for (int lev = 0; lev < levels; ++lev) {
-        int step = size / pow(2, lev);
-        for (int y = 0; y < size + 1; y += step) {
-            int jumpov = 1 - (y / step) % 2;
-            if (lev == 0) jumpov = 0;
-            for (int x = step * jumpov; x < size + 1; x += step * (1 + jumpov)) {
-                int pointer = 1 - (x / step) % 2 + 2 * jumpov;
-                if (lev == 0) pointer = 3;
-                int yref = step * (1 - pointer / 2);
-                int xref = step * (1 - pointer % 2);
-                double c1 = height[y - yref][x - xref];
-                double c2 = height[y + yref][x + xref];
-                double avg = (c1 + c2) / 2.0;
-                double var = step * (glm::linearRand(0.0, 1.0) - 0.5);
-                height[y][x] = (lev > 0) ? avg + var : 0;
-            }
-        }
-    }
-}
-
-int obtainGrasslandHeight(int x, int z) {
-    vec2 xz = vec2(x, z);
-    float freq = 85.f;
-    float h1 = PerlinNoise(xz/freq);
-    h1 = 1.f - abs(h1);
-    return floor(h1 * 22.f);
-}
-
-
-void Terrain::CreateTestScene()
+std::unordered_set<int64_t> Terrain::findTerrainZoneArea(glm::ivec2 terrPos, int rad)
 {
-    int xMin = 0, xMax = 256;
-    int zMin = 0, zMax = 256;
-    // Create the Chunks that will
-    // store the blocks for our
-    // initial world space
-    for(int x = xMin; x < xMax; x += 16) {
-        for(int z = zMin; z < zMax; z += 16) {
-            instantiateChunkAt(x, z);
+    std::unordered_set<int64_t> result;
+    int radZone = static_cast<int>(rad)*64;
+    //returns set of terrain zones inside the radius
+    for(int x = -radZone; x <= radZone; x+=64) {
+        for(int z = -radZone; z <= radZone; z+=64)
+            result.insert(toKey(x + terrPos.x, z + terrPos.y));
+    }
+    return result;
+}
+
+
+//allocating VBO data for chunk
+void Terrain::spawnVBOWorker(Chunk* chunk, int time)
+{
+    /*
+    //spawn vbo worker
+    */
+    VBOWorker* worker = new VBOWorker(chunk,
+                                  &m_chunksThatHaveVBOData,
+                                  &m_vboDataLock,
+                                  time);
+    QThreadPool::globalInstance()->start(worker);
+}
+
+//creating chunks from scratch
+void Terrain::spawnFBMWorker(int64_t terrZoneId)
+{
+    this->m_generatedTerrain.insert(terrZoneId);
+    std::vector<Chunk*> chunksThatNeedBlockType;
+    glm::ivec2 coords = toCoords(terrZoneId);
+    //one terrain zone is 64 by 64, origin at 'coords'
+    //VERIFIED: For 7by7 terrain zones, this instantiates
+    //784 chunks (7*7*4*4)
+    for(int x = coords.x; x < coords.x + 64; x+=16) {
+        for(int z = coords.y; z < coords.y + 64; z+=16) {
+            Chunk* chunk = instantiateChunkAt(x,z);
+            //TODO: drawing logic
+//            chunk->m_countTrans = 0;
+//            chunk->m_countOpaque = 0;
+            chunk->m_count = 0;
+            chunksThatNeedBlockType.push_back(chunk);
         }
     }
-    // Tell our existing terrain set that
-    // the "generated terrain zone" at (0,0)
-    // now exists.
-    //TODO: m2: CHANGE THIS
-    m_generatedTerrain.insert(toKey(0, 0));
-
-    int base_height = 128;
-    int water_level = 148;
-    int snow_level = 220;
-    int bed_level = 100;
-    int lava_level = 10;
-    int cave_opening_level = 155;
+    //FBM worker calls
+    FBMWorker* worker = new FBMWorker(coords.x, coords.y,
+                                      chunksThatNeedBlockType,
+                                      &m_chunksThatHaveBlockData,
+                                      &m_blockDataLock);
+    QThreadPool::globalInstance()->start(worker);
+}
 
 
-    int levels = 9;
-    int size = pow(2, (levels - 1));
-    double **m_height = new double*[size + 1];
-    genFractalMountainHeights(m_height, levels, size);
+//loading initial terrain with respect to
+//initial position @ (x=52,z=42) => terrain origin @ (0,0)
+//terrain: 7*7 terrain zones
+void Terrain::loadInitialTerrain()
+{
+    glm::ivec2 currZonePos(0,0);
+    std::unordered_set<int64_t> currZoneArea = findTerrainZoneArea(currZonePos, TERRAIN_ZONE_RADIUS);
+    std::cout << "Zones: " << currZoneArea.size() << std::endl;
 
+    for(auto id: currZoneArea)
+        spawnFBMWorker(id);
+}
 
-    // Create the basic terrain floor
-    for(int x = xMin; x < xMax; ++x) {
-        for(int z = zMin; z < zMax; ++z) {
+/*
+ * spawn FBM worker for border IDs,
+ * storing in a different chunksTHBlockData vector
+ * Create VBOs for all, area and border
+ * But don't pass border to GPU
+ * During try expansion -
+ * If expansion needed
+ *  destroy outside range
+ *
+ */
 
-            // set cave systems
-            setBlockAt(x, bed_level, z, BEDROCK);
-            for(int y=bed_level+1; y<base_height; y++) {
-                // Perlin Caves
-                if (!isGridEmpty(x, y, z)) {
-                    setBlockAt(x, y, z, STONE);
-                } else if(y<bed_level+lava_level) {
-                    setBlockAt(x, y, z, LAVA);
+void Terrain::tryExpansion(glm::vec3 prevPos, glm::vec3 currPos, int time)
+{
+    if(prevPos==currPos)
+        return;
+
+    //check if moved to a new terrain zone since last tick
+    glm::ivec2 prevZonePos(64*static_cast<int>(glm::floor(prevPos.x / 64.f)),
+                        64*static_cast<int>(glm::floor(prevPos.z / 64.f)));
+    glm::ivec2 currZonePos(64*static_cast<int>(glm::floor(currPos.x / 64.f)),
+                        64*static_cast<int>(glm::floor(currPos.z / 64.f)));
+
+    //Terrain Zone Radius SET TO 3 FOR NOW
+    //USING RADIUS+1 to account for border VBO (not rendered)
+    std::unordered_set<int64_t> currZoneArea = findTerrainZoneArea(currZonePos, TERRAIN_ZONE_RADIUS);
+    std::unordered_set<int64_t> prevZoneArea = findTerrainZoneArea(prevZonePos, TERRAIN_ZONE_RADIUS);
+
+    //destroying terrain zones/chunks that are not in radius anymore
+    for(auto id: prevZoneArea) {
+        //not in new terrain zones
+        if(currZoneArea.count(id)==0)
+        {
+            glm::ivec2 coord = toCoords(id);
+            for(int x = coord.x; x < coord.x + 64; x++) {
+                for(int z = coord.y; z < coord.y + 64; z++) {
+                    auto &chunk = getChunkAt(x,z);
+                    chunk->destroyVBOdata();
                 }
             }
-
-            // Procedural biome - interp the heights - with very low freq
-//            int y_m = obtainMountainHeight(x, z);
-            int y_m = obtainMountainHeight(x, z, m_height);
-            int y_g = obtainGrasslandHeight(x, z);
-            float t = worleyNoise(vec2(x, z)*0.005f, 1.f);
-            t = glm::smoothstep(0.35f, 0.75f, t);
-
-            int interp_h = glm::clamp((int) glm::mix(y_g, y_m, t), 0, base_height-1);
-
-            if (interp_h + base_height < water_level) {
-                // Water level
-                for (int kw=interp_h+base_height; kw < water_level; kw++) {
-                    setBlockAt(x, kw, z, WATER);
-                }
-            }
-
-            for (int k = 0; k<=interp_h; k++) {
-                if (t>0.5) {
-                    // Mountain biome
-                    if (k+base_height >= snow_level && k == interp_h) {
-                        setBlockAt(x, k+base_height, z, SNOW);
-                    }
-                    else {
-                        setBlockAt(x, k+base_height, z, STONE);
-                    }
-                } else {
-                    // Grassland biome
-                    if (isGridEmpty(x, k+base_height, z) && interp_h + base_height > water_level && interp_h + base_height < cave_opening_level) {
-                        continue;
-                    }
-                    if (k == interp_h) {
-                        setBlockAt(x, k+base_height, z, GRASS);
-                    }
-                    else {
-                        setBlockAt(x, k+base_height, z, DIRT);
-                    }
-                }
-            }
-//            // Terrain for basic testing
-//            setBlockAt(x, bed_level, z, BEDROCK);
-//            setBlockAt(x, bed_level+1, z, LAVA);
-//            setBlockAt(x, bed_level+2, z, LAVA);
-//            setBlockAt(x, bed_level+3, z, LAVA);
-//            setBlockAt(x, bed_level+4, z, LAVA);
         }
     }
 
-    for (int i = 0; i <= size; i++) {
-        delete[] m_height[i];
+    //assigning VBO Data to terrain zones that
+    //have been visited before but their VBO data was destroyed
+    //- By default, We can assume the VBO data was destroyed
+    // because as coded above, the program will destroy any VBO data outside the zone
+    for(auto id: currZoneArea) {
+        if(terrainZoneExists(id)) {
+            if(prevZoneArea.count(id)==0) {
+                glm::ivec2 coord = toCoords(id);
+                for(int x = coord.x; x < coord.x + 64; x+=16) {
+                    for(int z = coord.y; z < coord.y + 64; z+=16) {
+                        auto &chunk = getChunkAt(x,z);
+                        chunk->m_count = 0;
+                        //this should reallocate VBOs
+                        spawnVBOWorker(chunk.get(), time);
+                    }
+                }
+            }
+        }
+        //creating blocktype Data for terrain zones/chunks that
+        //have NEVER been visited before - from scratch
+        else {
+            spawnFBMWorker(id);
+        }
     }
-    delete[] m_height;
+}
+
+
+void Terrain::checkThreadResults(int time)
+{
+    //After all FBM workers are done, we now create VBO data
+    //for the newly instantiated chunks which have BlockType data
+    //Adds to m_chunksThatHaveVBOData bts
+    //createChunkVBOdata called here and
+    // chunksThatHaveVBOData is populated
+    this->m_blockDataLock.lock();
+    for(auto chunk: m_chunksThatHaveBlockData)
+        spawnVBOWorker(chunk, time);
+    m_chunksThatHaveBlockData.clear();
+    this->m_blockDataLock.unlock();
+
+    //Now, all chunks that have VBO data and can be sent to GPU
+    this->m_vboDataLock.lock();
+    for(ChunkVBOData& c: m_chunksThatHaveVBOData)
+    {
+        c.m_chunk->createVBOdata();
+    }
+    m_chunksThatHaveVBOData.clear();
+    this->m_vboDataLock.unlock();
 }

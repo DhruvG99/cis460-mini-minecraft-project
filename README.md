@@ -17,7 +17,7 @@ The new generation goes beyond chunks and works with terrains (4x4 chunks). All 
 The main challenge here has been to figure out how data must be shared across the various workers and their threads. It is convenient to do so using references to variables. Eg. the variables that store the chunks to be created/filled in Terrain are shared by reference to the workers and they can thus determine whether chunks need to be reallocated or created from scratch.
 
 ### Texturing and Texture Animation - Shubh Agarwal
-Created new VBOs to differentiate between transparent and opaque blocks. Modified the collision detection so that submergence in lava and water is possible. Added texture atlas to texture slot and also added a sampler to put textures to the blocks. Interpolated using time to animate water and lava. Modified player physics so that user can press <SPACE> to climb up inside liquid.   
+Created new VBOs to differentiate between transparent and opaque blocks. Modified the collision detection so that submergence in lava and water is possible. Added texture atlas to texture slot and also added a sampler to put textures to the blocks. Interpolated using time to animate water and lava. Modified player physics so that user can press to climb up inside liquid.
 
 ## Milestone 1
 ---

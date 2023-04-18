@@ -8,6 +8,7 @@ SOURCES += \
     $$PWD/mainwindow.cpp \
     $$PWD/mygl.cpp \
     $$PWD/quad.cpp \
+    $$PWD/scene/chunkworkers.cpp \
     $$PWD/scene/crosshair.cpp \
     $$PWD/shaderprogram.cpp \
     $$PWD/drawable.cpp \
@@ -29,6 +30,7 @@ HEADERS += \
     $$PWD/mainwindow.h \
     $$PWD/mygl.h \
     $$PWD/quad.h \
+    $$PWD/scene/chunkworkers.h \
     $$PWD/scene/crosshair.h \
     $$PWD/shaderprogram.h \
     $$PWD/drawable.h \

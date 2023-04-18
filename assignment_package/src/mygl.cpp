@@ -15,7 +15,8 @@ MyGL::MyGL(QWidget *parent)
       m_time(0), m_terrain(this), m_player(glm::vec3(52.f, 150.f, 42.f), m_terrain),
       m_framebuffer(this, width(), height(), devicePixelRatio()),
       m_progPostProcessCurrent(this),
-      m_geomQuad(this), m_currFrameTime(QDateTime::currentMSecsSinceEpoch())
+      m_geomQuad(this), m_currFrameTime(QDateTime::currentMSecsSinceEpoch()),
+      m_prevPos(glm::vec3(52.f, 200.f, 42.f))
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&m_timer, SIGNAL(timeout()), this, SLOT(tick()));
@@ -93,9 +94,9 @@ void MyGL::initializeGL()
 
 
     m_player.rotateOnRightLocal(-60.f);
-    m_player.moveForwardLocal(-50.f);
 
-    m_terrain.CreateTestScene();
+    m_terrain.loadInitialTerrain();
+    m_terrain.checkThreadResults(m_time);
 }
 
 void MyGL::resizeGL(int w, int h) {
@@ -128,8 +129,15 @@ void MyGL::tick() {
     float dT = (m_currFrameTime - prevTime) * 0.001f; // in seconds
     m_player.tick(dT, m_inputs);
 
+    glm::vec3 currPosition = m_player.mcr_position;
+
+    m_terrain.tryExpansion(this->m_prevPos, currPosition, m_time);
+    m_terrain.checkThreadResults(m_time);
+
     update(); // Calls paintGL() as part of a larger QOpenGLWidget pipeline
     sendPlayerDataToGUI(); // Updates the info in the secondary window displaying player data
+
+    this->m_prevPos = m_player.mcr_position;
 }
 
 void MyGL::sendPlayerDataToGUI() const {
@@ -158,7 +166,6 @@ void MyGL::paintGL() {
     m_progLambert.setModelMatrix(glm::mat4());
 
     int texture_slot = 1;
-
    // Added
    glm::vec3 playerPos = m_player.mcr_camera.mcr_position;
    auto currBtype = m_terrain.getBlockAt(playerPos.x, playerPos.y, playerPos.z);
@@ -194,20 +201,15 @@ void MyGL::paintGL() {
     m_progFlatCrosshair.setViewProjMatrix(glm::mat4());
     m_progFlatCrosshair.draw(m_crosshair);
     glEnable(GL_DEPTH_TEST);
-
-
 }
 
-// TODO: Change this so it renders the nine zones of generated
-// terrain that surround the player (refer to Terrain::m_generatedTerrain
-// for more info)
 void MyGL::renderTerrain() {
     glm::vec3 currPos = m_player.mcr_position;
-    int currX = static_cast<int>(glm::floor(currPos.x / 16.f));
-    int currZ = static_cast<int>(glm::floor(currPos.z / 16.f));
-    //for 3 by 3 chunks around player
-
-    m_terrain.draw(16*currX-32, 16*currX+32, 16*currZ-32, 16*currZ+32, &m_progLambert, m_time);
+    //The terrain coords
+    int currX = static_cast<int>(glm::floor(currPos.x / 64.f));
+    int currZ = static_cast<int>(glm::floor(currPos.z / 64.f));
+    //renders terrain zones around player
+    m_terrain.draw(64*currX, 64*currZ, &m_progLambert);
 }
 
 void MyGL::keyPressEvent(QKeyEvent *e) {

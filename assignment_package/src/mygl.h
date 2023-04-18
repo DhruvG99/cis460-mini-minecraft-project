@@ -70,6 +70,9 @@ public:
     // Calls Terrain::draw().
     void renderTerrain();
 
+    //used to check if tryExpansion needs to run.
+    glm::vec3 m_prevPos;
+
 protected:
     // Automatically invoked when the user
     // presses a key on the keyboard
