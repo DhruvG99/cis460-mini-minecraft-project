@@ -259,8 +259,8 @@ void Terrain::loadInitialTerrain()
 
 void Terrain::tryExpansion(glm::vec3 prevPos, glm::vec3 currPos, int time)
 {
-//    if(prevPos==currPos)
-//        return;
+    if(prevPos==currPos)
+        return;
 
     //check if moved to a new terrain zone since last tick
     glm::ivec2 prevZonePos(64*static_cast<int>(glm::floor(prevPos.x / 64.f)),
