@@ -116,6 +116,10 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
                       static_cast<unsigned int>(y),
                       static_cast<unsigned int>(z - chunkOrigin.y),
                       t);
+        //To ensure new block is placed/broken in draw
+        m_blockDataLock.lock();
+        m_chunksThatHaveBlockData.insert(c.get());
+        m_blockDataLock.unlock();
     }
     else {
         throw std::out_of_range("Coordinates " + std::to_string(x) +
@@ -163,7 +167,6 @@ void Terrain::draw(int currX, int currZ, ShaderProgram *shaderProgram)
             if(chunk!=nullptr) {
                 shaderProgram->drawInter(*chunk);
             }
-
         }
     }
 }
@@ -256,8 +259,8 @@ void Terrain::loadInitialTerrain()
 
 void Terrain::tryExpansion(glm::vec3 prevPos, glm::vec3 currPos, int time)
 {
-    if(prevPos==currPos)
-        return;
+//    if(prevPos==currPos)
+//        return;
 
     //check if moved to a new terrain zone since last tick
     glm::ivec2 prevZonePos(64*static_cast<int>(glm::floor(prevPos.x / 64.f)),
