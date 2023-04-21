@@ -96,7 +96,6 @@ void MyGL::initializeGL()
     m_player.rotateOnRightLocal(-60.f);
 
     m_terrain.loadInitialTerrain();
-    m_terrain.checkThreadResults(m_time);
 }
 
 void MyGL::resizeGL(int w, int h) {
